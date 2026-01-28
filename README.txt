@@ -11,7 +11,7 @@ script_real.R: running this script performs the analysis for the real data examp
 dataBirds.txt: the dataset.
 mv_MSPAL_illustration.R: the source code to fit SPM method, obtained from gitHub (https://github.com/psterzinger/softpen_supplementary), adapted by Rok Blagus to allow the calculation of SEs.
 
-./simulatedData/: [folder for reproducing the results reported in Section "Simulation study" and Supplementary Material]
+./simulated_data/: [folder for reproducing the results reported in Section "Simulation study" and Supplementary Material]
 make_scripts.R: running this scipt produces script_i.R, i in 1,...,360 and scriptses_i.R
 read_res.R: running this script reads all results (the txt files resulting from runing script_i.R and scriptses_i.R, i in 1,...,360), produces the figures and tables reported in the manuscript and Supplementary Material. Running this script requires the following R packages: ggplot2 and gridExtra.
 source_sim.R: this script is used by script_i.R to perform 1000 simulation runs for the specified simulation scenario: this is the core function to reproduce the simulation study. Here, the data according to the specified scenario are created and different methods are used to estimate the model's parameters. The results for each simulation scenarion and method are saved as txt files, where rows correspond to different simulation runs, and columns to the estimated parameters. Running this script requires the following R packages: MASS, brglm2, optimx, lme4, numDeriv, glmmTMB, mvtnorm, and blme. We performed this part of the analysis in the cluster of CentOS based containers
