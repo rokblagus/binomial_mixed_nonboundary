@@ -825,9 +825,9 @@ df_taus_f<-data.frame(taus=taus,liks=liks,lim=lim,opttau=tau1_f)
 
 ####plot cond liks by tau, with limits and optimal tau values in a single 3x1 plot
 
-df_taus_1$algorithm<-"MPL-1"
-df_taus$algorithm<-"MPL"
-df_taus_f$algorithm<-"MPL-2"
+df_taus_1$algorithm<-"MPL-A2(1)"
+df_taus$algorithm<-"MPL-A1"
+df_taus_f$algorithm<-"MPL-A2"
 
 df_taus_a<-rbind(df_taus_1,df_taus,df_taus_f)
 
@@ -945,7 +945,7 @@ ses<-sqrt(diag(fit_rok$fit$sdr$cov.fixed))
 limits$ymin<-limits$center-0.01*ses/2
 limits$ymax<-limits$center+0.01*ses/2
 
-dfpallete <- c(   "#CC6677","#88CCEE", "#AA4499")
+dfpallete <- c(   "#CC6677","#AA4499","#88CCEE" )
 
 g1<-ggplot(df_long, aes(x = row, y = value, color = matrix)) +
   geom_line() +
@@ -2701,9 +2701,9 @@ df2$row <- 1:nrow(df2)
 df3$row <- 1:nrow(df3)
 
 # Add source label
-df1$matrix <- "MPL-2"
-df2$matrix <- "MPL"
-df3$matrix <- "MPL-1"
+df1$matrix <- "MPL-A2"
+df2$matrix <- "MPL-A1"
+df3$matrix <- "MPL-A2(1)"
 
 # Combine
 df <- bind_rows(df1, df2,df3 )
@@ -2751,7 +2751,7 @@ ses<-sqrt(diag(fit_rok$fit$sdr$cov.fixed))
 limits$ymin<-limits$center-0.01*ses/2
 limits$ymax<-limits$center+0.01*ses/2
 
-dfpallete <- c(   "#CC6677","#88CCEE", "#AA4499")
+dfpallete <- c(   "#CC6677", "#AA4499","#88CCEE")
 
 
 g1<-ggplot(df_long, aes(x = row, y = value, color = matrix)) +
