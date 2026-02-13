@@ -504,24 +504,21 @@ df$method[df$method=="bmlt"]<-"BMT"
 
 
 
- df$method[df$method=="pml"]<-"MPL"
+ df$method[df$method=="pml"]<-"MPL-A1"
 
-df$method[df$method=="o"]<-"ORACLE"
+df$method[df$method=="o"]<-"ORACLE-A1"
 
-df$method[df$method=="pml1"]<-"MPL-1"
+df$method[df$method=="pml1"]<-"MPL-A2(1)"
 
-df$method[df$method=="o1"]<-"ORACLE-1"
-
-
-#df$method[df$method=="o1"]<-"ORACLE-1"
+df$method[df$method=="o1"]<-"ORACLE-A2(1)"
 
 
+ 
 
-df$method<-factor(df$method,levels=c("ML","BMN","BMT","MPL","MPL-1","ORACLE","ORACLE-1","SPM"))
-#df$method<-factor(df$method,levels=c("ML","BMN","BMT","PML","ORACLE","SPM"))
 
+df$method<-factor(df$method,levels=c("ML","BMN","BMT","MPL-A1","MPL-A2(1)","ORACLE-A1","ORACLE-A2(1)","SPM"))
+ 
 df2<-df2[df2$method%in%c("kos","bmln","bmlt","pml","o","pml1","o1"),]
-#df2<-df2[df2$method%in%c("kos","bmln","bmlt","pml","o"),]
 df2$method<-as.character(df2$method)
 df2$method[df2$method=="kos"]<-"SPM"
 
@@ -530,17 +527,15 @@ df2$method[df2$method=="bmln"]<-"BMN"
 df2$method[df2$method=="bmlt"]<-"BMT"
 
 
- df2$method[df2$method=="pml"]<-"MPL"
- df2$method[df2$method=="o"]<-"ORACLE"
- df2$method[df2$method=="o1"]<-"ORACLE-1"
+ df2$method[df2$method=="pml"]<-"MPL-A1"
+ df2$method[df2$method=="o"]<-"ORACLE-A1"
+ df2$method[df2$method=="o1"]<-"ORACLE-A2(1)"
  
- df2$method[df2$method=="pml1"]<-"MPL-1"
- #df2$method[df2$method=="o1"]<-"ORACLE-1"
+ df2$method[df2$method=="pml1"]<-"MPL-A2(1)"
+ 
 
-
-df2$method<-factor(df2$method,levels=c("BMN","BMT","MPL","MPL-1","ORACLE","ORACLE-1","SPM"))
-#df2$method<-factor(df2$method,levels=c("BMN","BMT","PML","ORACLE","SPM"))
-
+df2$method<-factor(df2$method,levels=c("BMN","BMT","MPL-A1","MPL-A2(1)","ORACLE-A1","ORACLE-A2(1)","SPM"))
+ 
 dfpallete <- c("black","#332288", "#117733", "#44AA99", "#88CCEE",
                 "#DDCC77", "#CC6677", "#AA4499")
 
@@ -548,18 +543,11 @@ dfpallete2 <- c("#332288", "#117733", "#44AA99", "#88CCEE",
                "#DDCC77", "#CC6677", "#AA4499")
 
 
-#dfpallete<-c("black","cadetblue","blue","magenta","deeppink" ,"darkviolet","lightblue")
-#dfpallete2<-c("cadetblue","blue","magenta","deeppink", "darkviolet","lightblue")
-
-
-#dfpallete<-c("black","cadetblue","blue","magenta", "darkviolet","lightblue")
-#dfpallete2<-c("cadetblue","blue","magenta",  "darkviolet","lightblue")
-
+ 
 df$group<-ifelse(df$N==20,"1","2")
 df2$group<-ifelse(df2$N==20,"1","2")
 
-#nms<-c("N=20\n n=S","N=20\n n=M","N=50\n n=S","N=50\n n=M")
-
+ 
 nms <- c(
   "atop(N==20, n[i]==S)",
   "atop(N==20, n[i]==M)",
@@ -619,7 +607,7 @@ ylab.prial="PRIAL (%)"
 mult<-sqrt(c(0.01,0.25,2.25))
 vrint<-c(0.1)
 #methods to show (omit PML, ORACLE and say in the text they are the same (show them in supplement))
-methods_omit<-c("MPL","ORACLE")
+methods_omit<-c("MPL-A1","ORACLE-A1")
 
 df_main<-df[(df$vr_int==0.5&df$mult==sqrt(0.01)&!df$method%in%methods_omit&df$rho==which.rho)|df$vr_int%in%vrint&df$mult%in%mult&!df$method%in%methods_omit&df$rho==which.rho,]
 df2_main<-df2[(df2$vr_int==0.5&df2$mult==sqrt(0.01)&!df2$method%in%methods_omit&df2$rho==which.rho)|df2$vr_int%in%vrint&df2$mult%in%mult&!df2$method%in%methods_omit&df2$rho==which.rho,]

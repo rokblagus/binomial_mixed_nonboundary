@@ -895,9 +895,9 @@ df2$row <- 1:nrow(df2)
 df3$row <- 1:nrow(df3)
 
 # Add source label
-df1$matrix <- "MPL-2"
-df2$matrix <- "MPL"
-df3$matrix <- "MPL-1"
+df1$matrix <- "MPL-A2"
+df2$matrix <- "MPL-A1"
+df3$matrix <- "MPL-A2(1)"
 
 # Combine
 df <- bind_rows(df1, df2,df3 )
@@ -1276,7 +1276,7 @@ resi_kos<-c(paste0(round(fixef,3)," (",round(ses,3),")"),
 
 #as in paper
 res<- cbind(resi_ml,resi_rok,resi_rok_f,resi_rok_1,resi_bglmert,resi_bglmern,resi_kos)
-colnames(res)<-c("ML","MPL","MPL-2","MPL-1","BMT","BMN","SPM")
+colnames(res)<-c("ML","MPL-A1","MPL-A2","MPL-A2(1)","BMT","BMN","SPM")
 
 
 rownames(res)<-c("Intercept","migration","food[granivourous]","food[all]","food[insectivourous]"
@@ -2403,9 +2403,9 @@ df_taus_1<-data.frame(taus=taus,liks=liks,lim=lim,opttau=tauf1)
 
 
 
-df_taus_1$algorithm<-"MPL-1"
-df_taus$algorithm<-"MPL"
-df_taus_f$algorithm<-"MPL-2"
+df_taus_1$algorithm<-"MPL-A2(1)"
+df_taus$algorithm<-"MPL-A1"
+df_taus_f$algorithm<-"MPL-A2"
 
 df_taus_a<-rbind(df_taus_1,df_taus,df_taus_f)
 
@@ -2669,7 +2669,7 @@ resi_bglmern<-c(fxf,
 ########
 
 res<-cbind(resi_rok,resi_rok3,resi_rok2,resi_bglmern,resi_bglmert)
-colnames(res)<-c("MPL","MPL-2","MPL-1","BMN","BMT")
+colnames(res)<-c("MPL-A1","MPL-A2","MPL-A2(1)","BMN","BMT")
 rownames(res)<-c("Intercept","migration","food[granivorous]","food[all]","food[insectivorous]","species (Intercept)"
                  ,"plyo (Intercept)","plyo (migration)","rho")
 
