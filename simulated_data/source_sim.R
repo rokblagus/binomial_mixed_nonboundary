@@ -1062,6 +1062,92 @@ tau2<-opt_tau
   
   
   
+  #full iteration, Algorithm 2
+  
+  ##full iteration
+  
+  
+  fit_rok0<-try(rok.iter(xdf,nu=NULL,psi=NULL,penTina = FALSE,weight.c = mv_multiplier(xdf)/2,
+                         plot.coef.path=FALSE,fit.frth=TRUE),silent=TRUE)
+  
+  if (class(fit_rok0)=="try-error") D_est<-diag(1,2,2) else D_est<-VarCorr(fit_rok0$fit)$cond$group[1:2,1:2]
+  q<-nrow(D_est)
+  tau=0
+  ee<-eigen(D_est)
+  
+  lm<-1 #identity as the shrink target
+  li<-ee$values+tau*(lm-ee$values)
+  psi0<-ee$vectors%*%diag(li)%*%t(ee$vectors)*3*q
+  nu0=2*q-1
+  
+  fit_rok1<-try(rok.iter(xdf,nu=nu0,psi=psi0,weight.c = mv_multiplier(xdf)/2,
+                         plot.coef.path=FALSE,fit.frth=TRUE),silent=TRUE)
+  
+  
+  
+  
+  
+  
+  
+  lik0<-get_cond_lik(fit_rok1$fit,xdf$Y)
+  
+  
+  
+  
+  
+  lim<-get_lim(fit_rok1$fit,xdf$Y,xdf$X) #1SE rule 
+  
+  
+  
+  
+  tau_finder_maxi<-function(tau){
+    li<-ee$values+tau*(lm-ee$values)
+    psi0<-ee$vectors%*%diag(li)%*%t(ee$vectors)*3*q
+    nu0=2*q-1
+    
+    fit_rok<-try(rok.iter(xdf,nu=nu0,psi=psi0,weight.c = mv_multiplier(xdf)/2,
+                          plot.coef.path=FALSE,fit.frth=TRUE),silent=TRUE)
+    -get_cond_lik(fit_rok$fit,xdf$Y) 
+    
+  }
+  
+  tau_finder<-function(tau){
+    li<-ee$values+tau*(lm-ee$values)
+    psi0<-ee$vectors%*%diag(li)%*%t(ee$vectors)*3*q
+    nu0=2*q-1
+    
+    fit_rok<-try(rok.iter(xdf,nu=nu0,psi=psi0,weight.c = mv_multiplier(xdf)/2,
+                          plot.coef.path=FALSE,fit.frth=TRUE),silent=TRUE)
+    abs(get_cond_lik(fit_rok$fit,xdf$Y)-lik0)-lim
+    
+  }
+  
+  tol_min<-.Machine$double.eps^0.2
+  tol_max<-.Machine$double.eps^0.2
+  
+  opti<-optimise(tau_finder_maxi,c(0,1))
+  
+  if (opti$minimum<tol_min){
+    uni<-  try(uniroot(tau_finder,lower=0,upper = 1),silent=TRUE)
+    if (class(uni)=="try-error") opt_tau<-1 else opt_tau<-uni$root
+  } else {
+    if ((-opti$objective-lik0)<lim) opt_tau<-opti$minimum else {
+      uni<-  uniroot(tau_finder,lower=tol_min,upper = opti$minimum) 
+      opt_tau<-uni$root
+    }
+  }
+  if (opt_tau>(1-tol_max)) opt_tau<-1-tol_max
+  if (opt_tau<tol_min) opt_tau<-tol_min
+  
+  
+  tau1_a1<-opt_tau
+  
+  li<-ee$values+opt_tau*(lm-ee$values)
+  psi0<-ee$vectors%*%diag(li)%*%t(ee$vectors)*3*q
+  nu0=2*q-1
+  
+  fit_rok_a2<-try(rok.iter(xdf,nu=nu0,psi=psi0,weight.c = mv_multiplier(xdf)/2,
+                        plot.coef.path=FALSE,fit.frth=TRUE),silent=TRUE)
   
 
   #ORCALE
@@ -1070,7 +1156,8 @@ tau2<-opt_tau
 
   fit_rok_o<-try(rok.iter(xdf,nu=nu0,psi=psi0,weight.c = mv_multiplier(xdf)/2,plot.coef.path=FALSE,fit.frth=FALSE),silent=TRUE)
   fit_rok_o1<-try(rok.iter.onestep(xdf,nu=nu0,psi=psi0,weight.c = mv_multiplier(xdf)/2,plot.coef.path=FALSE,fit.frth=TRUE),silent=TRUE)
-
+  fit_rok_o_a2<-try(rok.iter(xdf,nu=nu0,psi=psi0,weight.c = mv_multiplier(xdf)/2,plot.coef.path=FALSE,fit.frth=TRUE),silent=TRUE)
+  
  
   
 
@@ -1098,7 +1185,7 @@ tau2<-opt_tau
 
   #opt taus
   
-  opt.taus<-c(tau1,tau2)
+  opt.taus<-c(tau1,tau1_a1,tau2)
   
 #ML
   resml<-get_param(fit_ml,b0=b0,betas=betas)
@@ -1113,7 +1200,10 @@ tau2<-opt_tau
 
   respml1<-get_param(fit_rok_1$fit,b0=b0,betas=betas)
   resoracle1<-get_param(fit_rok_o1$fit,b0=b0,betas=betas)
-
+  #A2
+  respml_a2<-get_param(fit_rok_a2$fit,b0=b0,betas=betas)
+  resoracle_a2<-get_param(fit_rok_o_a2$fit,b0=b0,betas=betas)
+  
 
 #KOS
 
@@ -1141,6 +1231,9 @@ tau2<-opt_tau
   write(respml1,paste0("results/pml1",nms,".txt"),ncolumns=length(respml1),append = TRUE,sep="\t")
   write(resoracle1,paste0("results/o1",nms,".txt"),ncolumns=length(resoracle1),append = TRUE,sep="\t")
 
+  write(respml_a2,paste0("results/pmla2",nms,".txt"),ncolumns=length(respml_a2),append = TRUE,sep="\t")
+  write(resoracle_a2,paste0("results/oa2",nms,".txt"),ncolumns=length(resoracle_a2),append = TRUE,sep="\t")
+  
 
   print(ii)
 }

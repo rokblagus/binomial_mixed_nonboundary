@@ -8,6 +8,407 @@ library(ggplot2)
 library(gridExtra)
 
 
+################# 1st - compare different implementations
+
+
+
+
+zz=0
+for (N in c(20,50)){
+  for (n in c(10,20)){
+    for (vr_int in c(0.1,0.5)){
+      for (mult in sqrt(c(0.01,0.1,0.25,0.5,1))){
+        for (rh in c(-0.5,-0.2)){
+          
+          zz=zz+1
+          
+          sd_int<-sqrt(vr_int)
+          multiplier_int<-round(mult,7)
+          
+          sd_slope<-sd_int*multiplier_int
+          
+          b0 <- -3.5
+          
+          # regression coefficients of fixed effects
+          betas <- c(1, 1, 1, 0.35, -0.1)
+          
+          
+          rho=rh
+          
+          # list of covariance matrices for random effects
+          corr_mat <-  matrix(c(sd_int**2, rho*sd_int*sd_slope, rho*sd_int*sd_slope, sd_slope**2), ncol = 2, nrow = 2)
+          true_sig<-corr_mat
+          
+          true_pars<-c(NA,min(eigen(true_sig)$values),max(eigen(true_sig)$values),mean(eigen(true_sig)$values),
+                       determinant(true_sig)$modulus)
+          
+          nms<-paste(N,n,diag(corr_mat)[1],diag(corr_mat)[2],cov2cor(corr_mat)[1,2],sep="_")
+          
+          meth<-"pml"
+          
+          nmsfile<-paste0("results/",meth,nms,".txt") 
+          
+          
+          dd.f<-try(read.table(nmsfile,header=FALSE,sep="\t"),silent=TRUE)
+          if (class(dd.f)[1]!="try-error"){
+          
+          
+          
+          ddmf<-as.matrix(dd.f)
+          if (nrow(ddmf)>1000) ddmf[1:1000,] 
+          
+          meth<-"pml1"
+          
+          nmsfile<-paste0("results/",meth,nms,".txt") #using tau=0.05, truncation for POR  
+          
+          
+          dd.1<-read.table(nmsfile,header=FALSE,sep="\t")
+          ddm1<-as.matrix(dd.1)
+          if (nrow(ddm1)>1000) ddm1[1:1000,] 
+          
+          
+          meth<-"pmla2"
+          
+          nmsfile<-paste0("results/",meth,nms,".txt") 
+          
+          
+          dd.fa2<-read.table(nmsfile,header=FALSE,sep="\t")
+          
+          
+          
+          ddmfa2<-as.matrix(dd.fa2)
+          if (nrow(ddmfa2)>1000) ddmfa2[1:1000,]
+          
+           
+          par(mfrow=c(3,3))
+          
+          mad95<-mad<-rmse<-rep(NA,9)
+          for (mm in 1:9){
+             plot(ddmf[,mm],ddm1[,mm])
+              abline(a=0,b=1)  
+            mad[mm]<-mean(abs(ddmf[,mm]-ddm1[,mm])/sd(ddmf[,mm]))
+            rmse[mm]<-sqrt(mean((ddmf[,mm]-ddm1[,mm])**2))/sd(ddmf[,mm])
+            mad95[mm] <- quantile(abs(ddmf[,mm]-ddm1[,mm])/sd(ddmf[,mm]),probs=0.95)
+            
+            }
+          
+          sq_eucl_norm<-mean((apply(abs(ddmf[,1:9]-ddm1[,1:9])/matrix(apply(ddmf[,1:9],2,sd,na.rm=TRUE),ncol=9,nrow=nrow(ddmf),byrow = TRUE),1,mean,na.rm=TRUE)))
+          sq_eucl_norm_95<-quantile((apply(abs(ddmf[,1:9]-ddm1[,1:9])/matrix(apply(ddmf[,1:9],2,sd,na.rm=TRUE),ncol=9,nrow=nrow(ddmf),byrow = TRUE),1,mean,na.rm=TRUE)),probs=0.95)
+          
+          
+          par(mfrow=c(3,3))
+          
+          mad952<-mad2<-rmse2<-rep(NA,9)
+          for (mm in 1:9){
+            plot(ddmf[,mm],ddmfa2[,mm])
+            abline(a=0,b=1)  
+            mad2[mm]<-mean(abs(ddmf[,mm]-ddmfa2[,mm])/sd(ddmf[,mm]))
+            rmse2[mm]<-sqrt(mean((ddmf[,mm]-ddmfa2[,mm])**2))/sd(ddmf[,mm])
+            mad952[mm] <- quantile(abs(ddmf[,mm]-ddmfa2[,mm])/sd(ddmf[,mm]),probs=0.95)
+            
+          }
+          
+          sq_eucl_norm2<-mean((apply(abs(ddmf[,1:9]-ddmfa2[,1:9])/matrix(apply(ddmf[,1:9],2,sd,na.rm=TRUE),ncol=9,nrow=nrow(ddmf),byrow = TRUE),1,mean,na.rm=TRUE)))
+          sq_eucl_norm2_95<-quantile((apply(abs(ddmf[,1:9]-ddmfa2[,1:9])/matrix(apply(ddmf[,1:9],2,sd,na.rm=TRUE),ncol=9,nrow=nrow(ddmf),byrow = TRUE),1,mean,na.rm=TRUE)),probs=0.95)
+          
+          meth<-rep(c("PML-A1 vs PML-A2(1)","PML-A1 vs PML-A2"),each=length(mad952))
+          cfs<-c(paste0("beta",0:5),paste0("theta",1:3))
+          dfi1<-data.frame(
+            N=N,n=n,vr_int=vr_int,mult=mult,rho=rh,mad95=c(mad95,mad952),coef=rep(cfs,2),mad=c(mad,mad2),
+            rmse=c(rmse,rmse2),meth=meth,useful=TRUE)
+          
+          dfi1_2<-data.frame(
+            N=N,n=n,vr_int=vr_int,mult=mult,rho=rh,sqenorm=c(sq_eucl_norm,sq_eucl_norm2),sqenorm95=c(sq_eucl_norm_95,sq_eucl_norm2_95),meth=c("SAD(PML-A1,PML-A2(1))","SAD(PML-A1,PML-A2)"),useful=TRUE)
+          
+          ###oracle
+          
+          meth<-"o"
+          
+          nmsfile<-paste0("results/",meth,nms,".txt") 
+          
+          
+          dd.f<-read.table(nmsfile,header=FALSE,sep="\t")
+          
+          
+          
+          ddmf<-as.matrix(dd.f)
+          if (nrow(ddmf)>1000) ddmf[1:1000,] 
+          
+          meth<-"o1"
+          
+          nmsfile<-paste0("results/",meth,nms,".txt") #using tau=0.05, truncation for POR  
+          
+          
+          dd.1<-read.table(nmsfile,header=FALSE,sep="\t")
+          ddm1<-as.matrix(dd.1)
+          if (nrow(ddm1)>1000) ddm1[1:1000,] 
+          
+          
+          meth<-"oa2"
+          
+          nmsfile<-paste0("results/",meth,nms,".txt") 
+          
+          
+          dd.fa2<-read.table(nmsfile,header=FALSE,sep="\t")
+          
+          
+          
+          ddmfa2<-as.matrix(dd.fa2)
+          if (nrow(ddmfa2)>1000) ddmfa2[1:1000,]
+          
+          
+          par(mfrow=c(3,3))
+          
+          mad95<-mad<-rmse<-rep(NA,9)
+          for (mm in 1:9){
+            plot(ddmf[,mm],ddm1[,mm])
+            abline(a=0,b=1)  
+            mad[mm]<-mean(abs(ddmf[,mm]-ddm1[,mm])/sd(ddmf[,mm]))
+            rmse[mm]<-sqrt(mean((ddmf[,mm]-ddm1[,mm])**2))/sd(ddmf[,mm])
+            mad95[mm] <- quantile(abs(ddmf[,mm]-ddm1[,mm])/sd(ddmf[,mm]),probs=0.95)
+            
+          }
+          
+          sq_eucl_norm<-mean((apply(abs(ddmf[,1:9]-ddm1[,1:9])/matrix(apply(ddmf[,1:9],2,sd,na.rm=TRUE),ncol=9,nrow=nrow(ddmf),byrow = TRUE),1,mean,na.rm=TRUE)))
+          sq_eucl_norm_95<-quantile((apply(abs(ddmf[,1:9]-ddm1[,1:9])/matrix(apply(ddmf[,1:9],2,sd,na.rm=TRUE),ncol=9,nrow=nrow(ddmf),byrow = TRUE),1,mean,na.rm=TRUE)),probs=0.95)
+          
+          par(mfrow=c(3,3))
+          
+          mad952<-mad2<-rmse2<-rep(NA,9)
+          for (mm in 1:9){
+            plot(ddmf[,mm],ddmfa2[,mm])
+            abline(a=0,b=1)  
+            mad2[mm]<-mean(abs(ddmf[,mm]-ddmfa2[,mm])/sd(ddmf[,mm]))
+            rmse2[mm]<-sqrt(mean((ddmf[,mm]-ddmfa2[,mm])**2))/sd(ddmf[,mm])
+            mad952[mm] <- quantile(abs(ddmf[,mm]-ddmfa2[,mm])/sd(ddmf[,mm]),probs=0.95)
+          }
+          sq_eucl_norm2<-mean((apply(abs(ddmf[,1:9]-ddmfa2[,1:9])/matrix(apply(ddmf[,1:9],2,sd,na.rm=TRUE),ncol=9,nrow=nrow(ddmf),byrow = TRUE),1,mean,na.rm=TRUE)))
+          sq_eucl_norm2_95<-quantile((apply(abs(ddmf[,1:9]-ddmfa2[,1:9])/matrix(apply(ddmf[,1:9],2,sd,na.rm=TRUE),ncol=9,nrow=nrow(ddmf),byrow = TRUE),1,mean,na.rm=TRUE)),probs=0.95)
+          
+          
+          meth<-rep(c("ORACLE-A1 vs ORACLE-A2(1)","ORACLE-A1 vs ORACLE-A2"),each=length(mad952))
+          cfs<-c(paste0("beta",0:5),paste0("theta",1:3))
+          dfi2<-data.frame(
+            N=N,n=n,vr_int=vr_int,mult=mult,rho=rh,mad95=c(mad95,mad952),coef=rep(cfs,2),mad=c(mad,mad2),
+            rmse=c(rmse,rmse2),meth=meth,useful=FALSE)
+          
+          dfi2_2<-data.frame(
+            N=N,n=n,vr_int=vr_int,mult=mult,rho=rh,sqenorm=c(sq_eucl_norm,sq_eucl_norm2),sqenorm95=c(sq_eucl_norm_95,sq_eucl_norm2_95),meth=c("SAD(ORACLE-A1,ORACLE-A2(1))","SAD(ORACLE-A1,ORACLE-A2)"),useful=FALSE)
+          
+          
+          dfi<-rbind(dfi1,dfi2)
+          dfi_2<-rbind(dfi1_2,dfi2_2)
+          if(zz==1) df<-dfi else df<-rbind(df,dfi)
+          if(zz==1) df_2<-dfi_2 else df_2<-rbind(df_2,dfi_2)
+          
+          print(zz) 
+        }
+        }
+        
+      }
+    }
+  }}
+
+txt1<-"sigma[0]^2"
+txt2<-"sigma[1]^2"
+
+df$Nn<-paste0("N=",df$N,",n=",df$n)
+df$vars<-paste0(txt1,"==",df$vr_int,"*','*~",txt2,"==",df$vr_int*df$mult**2)
+
+
+df$Nn2<-as.numeric(as.factor(df$Nn))
+
+
+df$r2<-paste0("rho==",df$rho)
+df$group<-ifelse(df$N==20,"1","2")
+
+
+
+
+df$vars<-factor(df$vars)
+
+df_2$Nn<-paste0("N=",df_2$N,",n=",df_2$n)
+df_2$vars<-paste0(txt1,"==",df_2$vr_int,"*','*~",txt2,"==",df_2$vr_int*df_2$mult**2)
+
+
+df_2$Nn2<-as.numeric(as.factor(df_2$Nn))
+
+
+df_2$r2<-paste0("rho==",df_2$rho)
+df_2$group<-ifelse(df_2$N==20,"1","2")
+
+
+
+
+df_2$vars<-factor(df_2$vars)
+
+
+alphap=0.75
+
+
+
+nms <- c(
+  "atop(N==20, n[i]=='S')",
+  "atop(N==20, n[i]=='M')",
+  "atop(N==50, n[i]=='S')",
+  "atop(N==50, n[i]=='M')"
+)
+
+df$r2<-factor(df$r2,levels=c("rho==-0.5","rho==-0.2"))
+df_2$r2<-factor(df_2$r2,levels=c("rho==-0.5","rho==-0.2"))
+
+p1b1<-ggplot(df[df$rho==-0.5,],aes(group=interaction(meth, group)))+
+  geom_point(aes(x=Nn2,y=mad95,colour =  meth),size=2,alpha=alphap)+
+  geom_line(aes(x=Nn2,y=mad95,colour =  meth),linewidth=.7,alpha=alphap,linetype = "dashed")+
+  facet_grid(
+    coef+r2 ~ vars,
+    labeller = labeller(vars = label_parsed,r2=label_parsed)#,
+#    scales = "free_y"
+  ) +
+  theme_light()+
+  scale_x_continuous(
+    name = "",
+    breaks = c(1,2,3,4),
+    labels = function(x) parse(text = nms[x]),
+    limits = c(0.75,4.25)
+  ) +
+  ylab("Standardized absolute difference (SAD), 95th percentile")+
+  theme(axis.text.x = element_text(  vjust = 0.5, hjust=0.5))+
+  geom_hline(yintercept=c(0.01))+
+  # scale_colour_manual(values=dfpallete)+
+  theme(legend.title=element_blank())
+
+p1b2<-ggplot(df[df$rho==-0.2,],aes(group=interaction(meth, group)))+
+  geom_point(aes(x=Nn2,y=mad95,colour =  meth),size=2,alpha=alphap)+
+  geom_line(aes(x=Nn2,y=mad95,colour =  meth),linewidth=.7,alpha=alphap,linetype = "dashed")+
+  facet_grid(
+    coef+r2 ~ vars,
+    labeller = labeller(vars = label_parsed,r2=label_parsed)#,
+    #    scales = "free_y"
+  ) +
+  theme_light()+
+  scale_x_continuous(
+    name = "",
+    breaks = c(1,2,3,4),
+    labels = function(x) parse(text = nms[x]),
+    limits = c(0.75,4.25)
+  ) +
+  ylab("Standardized absolute difference (SAD), 95th percentile")+
+  theme(axis.text.x = element_text(  vjust = 0.5, hjust=0.5))+
+  geom_hline(yintercept=c(0.01))+
+  # scale_colour_manual(values=dfpallete)+
+  theme(legend.title=element_blank())
+
+p2b1<-ggplot(df[df$rho==-0.5,],aes(group=interaction(meth, group)))+
+  geom_point(aes(x=Nn2,y=mad,colour =  meth),size=2,alpha=alphap)+
+  geom_line(aes(x=Nn2,y=mad,colour =  meth),linewidth=.7,alpha=alphap,linetype = "dashed")+
+  facet_grid(
+    r2+coef  ~ vars,
+    labeller = labeller(vars = label_parsed,r2=label_parsed)#,
+    #    scales = "free_y"
+  ) +
+  theme_light()+
+  scale_x_continuous(
+    name = "",
+    breaks = c(1,2,3,4),
+    labels = function(x) parse(text = nms[x]),
+    limits = c(0.75,4.25)
+  ) +
+  ylab("Standardized absolute difference (SAD), mean")+
+  theme(axis.text.x = element_text(  vjust = 0.5, hjust=0.5))+
+  geom_hline(yintercept=c(0.01))+
+  # scale_colour_manual(values=dfpallete)+
+  theme(legend.title=element_blank())
+
+p2b2<-ggplot(df[df$rho==-0.2,],aes(group=interaction(meth, group)))+
+  geom_point(aes(x=Nn2,y=mad,colour =  meth),size=2,alpha=alphap)+
+  geom_line(aes(x=Nn2,y=mad,colour =  meth),linewidth=.7,alpha=alphap,linetype = "dashed")+
+  facet_grid(
+    r2+coef  ~ vars,
+    labeller = labeller(vars = label_parsed,r2=label_parsed)#,
+    #    scales = "free_y"
+  ) +
+  theme_light()+
+  scale_x_continuous(
+    name = "",
+    breaks = c(1,2,3,4),
+    labels = function(x) parse(text = nms[x]),
+    limits = c(0.75,4.25)
+  ) +
+  ylab("Standardized absolute difference (SAD), mean")+
+  theme(axis.text.x = element_text(  vjust = 0.5, hjust=0.5))+
+  geom_hline(yintercept=c(0.01))+
+  # scale_colour_manual(values=dfpallete)+
+  theme(legend.title=element_blank())
+
+
+p4b<-ggplot(df_2,aes(group=interaction(meth, group)))+
+  geom_point(aes(x=Nn2,y=sqenorm,colour =  meth),size=2,alpha=alphap)+
+  geom_line(aes(x=Nn2,y=sqenorm,colour =  meth),linewidth=.7,alpha=alphap,linetype = "dashed")+
+  facet_grid(
+    r2  ~ vars,
+    labeller = labeller(vars = label_parsed,r2=label_parsed)#,
+    #    scales = "free_y"
+  ) +
+  theme_light()+
+  scale_x_continuous(
+    name = "",
+    breaks = c(1,2,3,4),
+    labels = function(x) parse(text = nms[x]),
+    limits = c(0.75,4.25)
+  ) +
+  ylab("Standardized absolute difference (SAD), mean")+
+  theme(axis.text.x = element_text(  vjust = 0.5, hjust=0.5))+
+  geom_hline(yintercept=c(0.01))+
+  # scale_colour_manual(values=dfpallete)+
+  theme(legend.title=element_blank())
+
+p4b2<-ggplot(df_2,aes(group=interaction(meth, group)))+
+  geom_point(aes(x=Nn2,y=sqenorm95,colour =  meth),size=2,alpha=alphap)+
+  geom_line(aes(x=Nn2,y=sqenorm95,colour =  meth),linewidth=.7,alpha=alphap,linetype = "dashed")+
+  facet_grid(
+    r2  ~ vars,
+    labeller = labeller(vars = label_parsed,r2=label_parsed)#,
+    #    scales = "free_y"
+  ) +
+  theme_light()+
+  scale_x_continuous(
+    name = "",
+    breaks = c(1,2,3,4),
+    labels = function(x) parse(text = nms[x]),
+    limits = c(0.75,4.25)
+  ) +
+  ylab("Standardized absolute difference (SAD), 95th percentile")+
+  theme(axis.text.x = element_text(  vjust = 0.5, hjust=0.5))+
+  geom_hline(yintercept=c(0.01))+
+  # scale_colour_manual(values=dfpallete)+
+  theme(legend.title=element_blank())
+
+pdf("figs/supp_lin_p1.pdf",height=25,width=22)
+p1b1
+dev.off()
+
+pdf("figs/supp_lin_p2.pdf",height=25,width=22)
+p1b2
+dev.off()
+
+
+pdf("figs/supp_sadd_p1.pdf",height=25,width=22)
+p2b1
+dev.off()
+
+pdf("figs/supp_sadd_p2.pdf",height=25,width=22)
+p2b2
+dev.off()
+
+
+pdf("figs/supp_sad.pdf",height=20,width=22)
+grid.arrange(p4b,p4b2,nrow=2)
+dev.off()
+
+
+################# 2nd - summarize the performance of all methods
+
 ######cnvergence params
 
 ##binom
@@ -121,12 +522,12 @@ get_determinant<-function(ests){
 zz=0
 for (N in c(20,50)){
   for (n in c(10,20)){
-    for (vr_int in c(0.01,0.1,0.5)){
-      for (mult in c(0.1,0.5,1.5,2,10)){
-        for (rh in c(-0.8,-0.5,-0.2,0.2,0.5,0.8)){
-
+    for (vr_int in c(0.1,0.5)){
+      for (mult in sqrt(c(0.01,0.1,0.25,0.5,1))){
+        for (rh in c(-0.5,-0.2)){
+          
           sd_int<-sqrt(vr_int)
-          multiplier_int<-mult
+          multiplier_int<-round(mult,7)
 
           sd_slope<-sd_int*multiplier_int
 
@@ -146,7 +547,7 @@ for (N in c(20,50)){
 
           nms<-paste(N,n,diag(corr_mat)[1],diag(corr_mat)[2],cov2cor(corr_mat)[1,2],sep="_")
 
-          if (rh>0.2) nmsfile<-paste0("D:\\Mixed_separation_fixed_july_25_final/results/ses",nms,".txt") else nmsfile<-paste0("results/ses",nms,".txt")
+          nmsfile<-paste0("results/ses",nms,".txt")
 
           dd<-try(read.table(nmsfile,header=FALSE,sep="\t"),silent = TRUE)
           if (class(dd)!="try-error"){
@@ -167,19 +568,19 @@ for (N in c(20,50)){
 zz=0
 for (N in c(20,50)){
   for (n in c(10,20)){
-    for (vr_int in c(0.01,0.1,0.5)){
-      for (mult in c(0.1,0.5,1.5,2,10)){
-        for (rh in c(-0.8,-0.5,-0.2,0.2,0.5,0.8)){
+    for (vr_int in c(0.1,0.5)){
+      for (mult in sqrt(c(0.01,0.1,0.25,0.5,1))){
+        for (rh in c(-0.5,-0.2)){
+          
 
 
-
-          for (meth in c("kos","kos2","ml","bmln","bmlt", "pml","o", "pml1","o1")){
+          for (meth in c("kos","kos2","ml","bmln","bmlt", "pml","o", "pml1","o1","pmla2","oa2")){
           #  for (meth in c("kos", "pml","ml")){
            #meth="ml"   
 
           sd_int<-sqrt(vr_int)
-          multiplier_int<-mult
-
+          multiplier_int<-round(mult,7)
+          
           sd_slope<-sd_int*multiplier_int
 
           b0 <- -3.5
@@ -200,7 +601,7 @@ true_pars<-c(NA,min(eigen(true_sig)$values),max(eigen(true_sig)$values),mean(eig
           nms<-paste(N,n,diag(corr_mat)[1],diag(corr_mat)[2],cov2cor(corr_mat)[1,2],sep="_")
 
             
-          if (meth%in%c("pml1","o1")) nmsfile<-paste0("../Mixed_separation_fixed_dec_25/results/",meth,nms,".txt") else nmsfile<-paste0("results/",meth,nms,".txt") #using tau=0.05, truncation for POR  
+          nmsfile<-paste0("results/",meth,nms,".txt")  
            
           
           dd<-try(read.table(nmsfile,header=FALSE,sep="\t"),silent = TRUE)
@@ -329,38 +730,26 @@ true_pars<-c(NA,min(eigen(true_sig)$values),max(eigen(true_sig)$values),mean(eig
     }}}
 }
 
-##compare pml and kos
-#mm<-cbind(
-#df[df$method%in%c("pml"),names(df)%in%c("mloss","N","n","vr_int","mult","rho")],
-#df[df$method%in%c("pml1"),"mloss"],
-#df[df$method%in%c("kos"),"mloss"],
-#df[df$method%in%c("ml"),"mloss"],
-#df[df$method%in%c("po"),"mloss"],
-#df[df$method%in%c("po1"),"mloss"],
-#df[df$method%in%c("o"),"mloss"],
-#df[df$method%in%c("pml"),"nsim"]
-#)
-#colnames(mm)[6:8]<-c("pml","kos","nsim")
-
+ 
 display_taus<-FALSE
 
 if (display_taus){
 ##see taus - too many for all sims!
 #par(mfrow=c(12,10),mar=c(3,2,3,1))
-par(mfrow=c(5,10),mar=c(3,2,3,1))
+par(mfrow=c(8,10),mar=c(3,2,3,1))
 zz=0
 for (N in c(20,50)){
   for (n in c(10,20)){
-    for (vr_int in c(0.01,0.1,0.5)){
-      for (mult in c(0.1,0.5,1.5,2,10)){
-        for (rh in c(-0.8,-0.5,-0.2,0.2,0.5,0.8)){
+    for (vr_int in c(0.1,0.5)){
+      for (mult in sqrt(c(0.01,0.1,0.25,0.5,1))){
+        for (rh in c(-0.5,-0.2)){
           
           
           
              
             
             sd_int<-sqrt(vr_int)
-            multiplier_int<-mult
+            multiplier_int<-round(mult,7)
             
             sd_slope<-sd_int*multiplier_int
             
@@ -393,7 +782,7 @@ for (N in c(20,50)){
             
                
               ddm<-as.matrix(dd)
-              colnames(ddm)<-c("PML","PML-1")
+              colnames(ddm)<-c("PML-A1","PML-A2","PML-A2(1)")
             boxplot(ddm,main=nms,ylim=c(0,1))
           
              #   dfi<-data.frame(
@@ -445,16 +834,6 @@ ggplot(df[df$method=="ml",])+
   #geom_hline(yintercept=1000)
 
 
-ggplot(df[df$method=="pml1",])+
-  geom_point(aes(x=Nn2,y=nsim),size=2)+
-  geom_line(aes(x=Nn2,y=nsim),size=.7)+
-  facet_grid(r2~vars,labeller = label_parsed)+
-  theme_light()+
-  #scale_x_continuous(name="", breaks=c(1,2,3,4), labels=levels(factor(dft$Nn)))+
-  ylab("n sim")+
-  theme(axis.text.x = element_text(angle = 45, vjust = 0.5, hjust=0.5))#+
-#geom_hline(yintercept=1000)
-
 
 
 
@@ -463,14 +842,14 @@ ggplot(df[df$method=="pml1",])+
 zz=0
 for (N in c(20,50)){
   for (n in c(10,20)){
-    for (vr_int in c(0.01,0.1,0.5)){
-      for (mult in c(0.1,0.5,1.5,2,10)){
-        for (rh in c(0.5,0.8,-0.2,0.2,-0.8,-0.5)){
-          mod="bin"
+    for (vr_int in c(0.1,0.5)){
+      for (mult in sqrt(c(0.01,0.1,0.25,0.5,1))){
+        for (rh in c(-0.5,-0.2)){
+          
 
-
-          for (meth in c("kos","kos2","bmln","bmlt", "pml","o", "pml1","o1")){
+          for (meth in c("kos","kos2","bmln","bmlt", "pml","o", "pml1","o1","pmla2","oa2")){
             zz=zz+1
+             
             dfi<-df[df$N==N&df$n==n&df$vr_int==vr_int&df$mult==mult&df$rho==rh&df$method%in%c(meth,"ml"),c(1:8,which(names(df)%in%c("Nn","vars","Nn2","r2")))]
             if (nrow(dfi)==2){
               prial<-(dfi$mloss[dfi$method=="ml"]-dfi$mloss[dfi$method==meth])/dfi$mloss[dfi$method=="ml"]*100
@@ -488,8 +867,7 @@ for (N in c(20,50)){
  
 ################final figs as for the paper: only show useful methods
 
-df<-df[df$method%in%c("kos","ml","bmln","bmlt","pml","o","pml1","o1"),]
-#df<-df[df$method%in%c("kos","ml","bmln","bmlt","pml","o"),]
+df<-df[df$method%in%c("kos","ml","bmln","bmlt","pml","o","pml1","o1","pmla2","oa2"),]
 
 #rename methods as in paper
 
@@ -512,13 +890,16 @@ df$method[df$method=="pml1"]<-"MPL-A2(1)"
 
 df$method[df$method=="o1"]<-"ORACLE-A2(1)"
 
+df$method[df$method=="pmla2"]<-"MPL-A2"
+
+df$method[df$method=="oa2"]<-"ORACLE-A2"
 
  
 
 
-df$method<-factor(df$method,levels=c("ML","BMN","BMT","MPL-A1","MPL-A2(1)","ORACLE-A1","ORACLE-A2(1)","SPM"))
+df$method<-factor(df$method,levels=c("ML","BMN","BMT","MPL-A1","MPL-A2","MPL-A2(1)","ORACLE-A1","ORACLE-A2","ORACLE-A2(1)","SPM"))
  
-df2<-df2[df2$method%in%c("kos","bmln","bmlt","pml","o","pml1","o1"),]
+df2<-df2[df2$method%in%c("kos","bmln","bmlt","pml","o","pml1","o1","pmla2","oa2"),]
 df2$method<-as.character(df2$method)
 df2$method[df2$method=="kos"]<-"SPM"
 
@@ -533,14 +914,18 @@ df2$method[df2$method=="bmlt"]<-"BMT"
  
  df2$method[df2$method=="pml1"]<-"MPL-A2(1)"
  
-
-df2$method<-factor(df2$method,levels=c("BMN","BMT","MPL-A1","MPL-A2(1)","ORACLE-A1","ORACLE-A2(1)","SPM"))
+ df2$method[df2$method=="oa2"]<-"ORACLE-A2"
  
-dfpallete <- c("black","#332288", "#117733", "#44AA99", "#88CCEE",
-                "#DDCC77", "#CC6677", "#AA4499")
+ df2$method[df2$method=="pmla2"]<-"MPL-A2"
+ 
 
-dfpallete2 <- c("#332288", "#117733", "#44AA99", "#88CCEE",
-               "#DDCC77", "#CC6677", "#AA4499")
+df2$method<-factor(df2$method,levels=c("BMN","BMT","MPL-A1","MPL-A2","MPL-A2(1)","ORACLE-A1","ORACLE-A2","ORACLE-A2(1)","SPM"))
+ 
+dfpallete <- c("black","#332288", "#117733", "#44AA99","#66BBCC", "#88CCEE",
+                "#DDCC77","#D59977", "#CC6677", "#AA4499")
+
+dfpallete2 <- c("#332288", "#117733", "#44AA99", "#66BBCC", "#88CCEE",
+               "#DDCC77","#D59977", "#CC6677", "#AA4499")
 
 
  
@@ -556,43 +941,9 @@ nms <- c(
 )
 
 
-df$vars<-factor(df$vars,levels=c(
-  "sigma[0]^2==0.01*','*~sigma[1]^2==1e-04" ,
-  "sigma[0]^2==0.01*','*~sigma[1]^2==0.0025",
-    "sigma[0]^2==0.01*','*~sigma[1]^2==0.0225",
-    "sigma[0]^2==0.01*','*~sigma[1]^2==0.04"  ,
-    "sigma[0]^2==0.01*','*~sigma[1]^2==1"     ,
-        "sigma[0]^2==0.1*','*~sigma[1]^2==0.001"  ,
-    "sigma[0]^2==0.1*','*~sigma[1]^2==0.025"  ,
-    "sigma[0]^2==0.1*','*~sigma[1]^2==0.225"  ,
-    "sigma[0]^2==0.1*','*~sigma[1]^2==0.4"    ,
-    "sigma[0]^2==0.1*','*~sigma[1]^2==10"     ,
-    "sigma[0]^2==0.5*','*~sigma[1]^2==0.005"  ,
-   "sigma[0]^2==0.5*','*~sigma[1]^2==0.125"  ,
-    "sigma[0]^2==0.5*','*~sigma[1]^2==1.125"  ,
-    "sigma[0]^2==0.5*','*~sigma[1]^2==2"      ,
-    "sigma[0]^2==0.5*','*~sigma[1]^2==50"  
-  
-))
+df$vars<-factor(df$vars)
 
-df2$vars<-factor(df2$vars,levels=c(
-  "sigma[0]^2==0.01*','*~sigma[1]^2==1e-04" ,
-  "sigma[0]^2==0.01*','*~sigma[1]^2==0.0025",
-  "sigma[0]^2==0.01*','*~sigma[1]^2==0.0225",
-  "sigma[0]^2==0.01*','*~sigma[1]^2==0.04"  ,
-  "sigma[0]^2==0.01*','*~sigma[1]^2==1"     ,
-  "sigma[0]^2==0.1*','*~sigma[1]^2==0.001"  ,
-  "sigma[0]^2==0.1*','*~sigma[1]^2==0.025"  ,
-  "sigma[0]^2==0.1*','*~sigma[1]^2==0.225"  ,
-  "sigma[0]^2==0.1*','*~sigma[1]^2==0.4"    ,
-  "sigma[0]^2==0.1*','*~sigma[1]^2==10"     ,
-  "sigma[0]^2==0.5*','*~sigma[1]^2==0.005"  ,
-  "sigma[0]^2==0.5*','*~sigma[1]^2==0.125"  ,
-  "sigma[0]^2==0.5*','*~sigma[1]^2==1.125"  ,
-  "sigma[0]^2==0.5*','*~sigma[1]^2==2"      ,
-  "sigma[0]^2==0.5*','*~sigma[1]^2==50"  
-  
-))
+df2$vars<-factor(df2$vars)
 
 #supplement: boundary est all criteria, PRIAL, all methods
 alphap=0.75
@@ -604,23 +955,30 @@ offset.x=FALSE #offset the methods in direction of x? avoids overlap but seems w
 ylab.prial="PRIAL (%)"
 #scenarios to show in main file
 #theta=0.25,2.25
-mult<-sqrt(c(0.01,0.25,2.25))
-vrint<-c(0.1)
-#methods to show (omit PML, ORACLE and say in the text they are the same (show them in supplement))
-methods_omit<-c("MPL-A1","ORACLE-A1")
+mult2<-c(0.01,0.1,0.25)
+vrint<-c(0.1,0.5)
 
-df_main<-df[(df$vr_int==0.5&df$mult==sqrt(0.01)&!df$method%in%methods_omit&df$rho==which.rho)|df$vr_int%in%vrint&df$mult%in%mult&!df$method%in%methods_omit&df$rho==which.rho,]
-df2_main<-df2[(df2$vr_int==0.5&df2$mult==sqrt(0.01)&!df2$method%in%methods_omit&df2$rho==which.rho)|df2$vr_int%in%vrint&df2$mult%in%mult&!df2$method%in%methods_omit&df2$rho==which.rho,]
+mult2<-c(0.01,0.1,0.25,0.5,1)
+vrint<-c(0.1)
+
+
+plot_ind<-FALSE #this plots individual plots used in supp in rows
+#methods to show (omit PML, ORACLE and say in the text they are the same (show them in supplement))
+#methods_omit<-c("MPL-A1","ORACLE-A1","MPL-A2","ORACLE-A2")
+methods_omit<-c("MPL-A2","ORACLE-A2")
+
+df_main<-df[round(df$mult**2,3)%in%mult2&df$vr_int%in%vrint&!df$method%in%methods_omit&df$rho==which.rho,]
+df2_main<-df2[round(df2$mult**2,3)%in%mult2&df2$vr_int%in%vrint&!df2$method%in%methods_omit&df2$rho==which.rho,]
 
 #df_main<-df[df$mult%in%mult&!df$method%in%methods_omit,]
 #df2_main<-df2[df2$mult%in%mult&!df2$method%in%methods_omit,]
 
 
-dfpallete_main <- c("black","#332288", "#117733",  "#88CCEE",
-                "#CC6677", "#AA4499")
+dfpallete_main <- c("black","#332288", "#117733","#44AA99",  "#88CCEE",
+                    "#DDCC77", "#CC6677", "#AA4499")
 
-dfpallete2_main <- c("#332288", "#117733",  "#88CCEE",
-                 "#CC6677", "#AA4499")
+dfpallete2_main <- c("#332288", "#117733", "#44AA99", "#88CCEE",
+                     "#DDCC77",  "#CC6677", "#AA4499")
 
 
 if(offset.x){
@@ -660,11 +1018,11 @@ sapply(split(df$bound_r,df$method),function(x) max(x))
 
 #total proportion of datasets with boundary estimates
 
-round(sapply(split(df$bound_tot,df$method),function(x) sum(x*1000)/(360*1000)*100) ,3)
-round(sapply(split(df$bound_beta,df$method),function(x) sum(x*1000)/(360*1000)*100) ,3)
-      round(sapply(split(df$bound_t,df$method),function(x) sum(x*1000)/(360*1000)*100),3) 
-#round(sapply(split(df$bound_s,df$method),function(x) sum(x*1000)/(360*1000)) ,2)
-#round(sapply(split(df$bound_r,df$method),function(x) sum(x*1000)/(360*1000)),2) 
+round(sapply(split(df$bound_tot,df$method),function(x) sum(x*1000)/(80*1000)*100) ,3)
+round(sapply(split(df$bound_beta,df$method),function(x) sum(x*1000)/(80*1000)*100) ,3)
+      round(sapply(split(df$bound_t,df$method),function(x) sum(x*1000)/(80*1000)*100),3) 
+#round(sapply(split(df$bound_s,df$method),function(x) sum(x*1000)/(80*1000)) ,2)
+#round(sapply(split(df$bound_r,df$method),function(x) sum(x*1000)/(80*1000)),2) 
 
 
 #total number of datasets with boundary estimates
@@ -680,7 +1038,7 @@ sapply(split(df$bound_t,df$method),function(x) sum(x*1000)) #sigma
 
 p_bound<-ggplot(df_main,aes(group=interaction(method, group)))+
   geom_point(aes(x=x_off,y=bound_tot*100,colour =  method),size=2,alpha=alphap)+
-  geom_line(aes(x=x_off,y=bound_tot*100,colour =  method),size=.7,alpha=alphap)+#, linetype = "dashed")+
+  geom_line(aes(x=x_off,y=bound_tot*100,colour =  method),size=.7,alpha=alphap,linetype = "dashed")+#, linetype = "dashed")+
   facet_grid(r2~vars,labeller = label_parsed)+
   theme_light()+
   scale_x_continuous(name="", breaks=c(1,2,3,4), labels=parse(text = nms),limits = c(0.75,4.25))+
@@ -704,7 +1062,7 @@ p_bound<-ggplot(df_main,aes(group=interaction(method, group)))+
 
 pp_prial1<-ggplot(df2_main,aes(group=interaction(method, group)))+
   geom_point(aes(x=x_off,y=prial,colour =  method),size=2,alpha=alphap )+
-  geom_line(aes(x=x_off,y=prial,colour =  method),size=0.7,alpha=alphap)+#, linetype = "dashed")+
+  geom_line(aes(x=x_off,y=prial,colour =  method),size=0.7,alpha=alphap,linetype = "dashed")+#, linetype = "dashed")+
   facet_grid(r2~vars,scales="free_y",labeller = label_parsed)+
   theme_light()+
   scale_x_continuous(name="", breaks=c(1,2,3,4), labels=parse(text = nms),limits = c(0.75,4.25))+
@@ -722,7 +1080,7 @@ pp_prial1<-ggplot(df2_main,aes(group=interaction(method, group)))+
 
 pp_prial2<-ggplot(df2_main,aes(group=interaction(method, group)))+
   geom_point(aes(x=x_off,y=prial2,colour =  method),size=2,alpha=alphap)+
-  geom_line(aes(x=x_off,y=prial2,colour =  method),size=0.7,alpha=alphap)+#, linetype = "dashed")+
+  geom_line(aes(x=x_off,y=prial2,colour =  method),size=0.7,alpha=alphap,linetype = "dashed")+#, linetype = "dashed")+
   facet_grid(r2~vars,scales="free_y",labeller = label_parsed)+
   geom_vline(xintercept = c(1.5,2.5, 3.5),  color = "grey90") +
   theme_light()+
@@ -745,7 +1103,7 @@ pdf("figs/Fig1.pdf",height=15/5*3,width=15)
 grid.arrange(p_bound,pp_prial1,pp_prial2)
 dev.off()
 } else {
-  pdf("figs/Fig1.pdf",height=15/5*2,width=15/6*4)
+  pdf("figs/Fig1.pdf",height=15/5*2,width=15/6*5)
   grid.arrange(p_bound,pp_prial1)
   dev.off()
 }
@@ -756,7 +1114,7 @@ dev.off()
 
 p1b<-ggplot(df_main,aes(group=interaction(method, group)))+
   geom_point(aes(x=x_off,y=bias_b5,colour =  method),size=2,alpha=alphap )+
-  geom_line(aes(x=x_off,y=bias_b5,colour =  method),size=.7,alpha=alphap)+#, linetype = "dashed")+
+  geom_line(aes(x=x_off,y=bias_b5,colour =  method),size=.7,alpha=alphap,linetype = "dashed")+#, linetype = "dashed")+
   facet_grid(r2~vars,labeller = label_parsed,scales="free_y")+
   theme_light()+
   scale_x_continuous(name="", breaks=c(1,2,3,4), labels=parse(text = nms),limits = c(0.75,4.25))+
@@ -773,7 +1131,7 @@ p1b<-ggplot(df_main,aes(group=interaction(method, group)))+
 
 p1b2<-ggplot(df_main,aes(group=interaction(method, group)))+
   geom_point(aes(x=x_off,y=log(abs(bias_b5)),colour =  method),size=2,alpha=alphap )+
-  geom_line(aes(x=x_off,y=log(abs(bias_b5)),colour =  method),size=.7,alpha=alphap)+#, linetype = "dashed")+
+  geom_line(aes(x=x_off,y=log(abs(bias_b5)),colour =  method),size=.7,alpha=alphap,linetype = "dashed")+#, linetype = "dashed")+
   facet_grid(r2~vars,labeller = label_parsed,scales="free_y")+
   theme_light()+
   scale_x_continuous(name="", breaks=c(1,2,3,4), labels=parse(text = nms),limits = c(0.75,4.25))+
@@ -791,7 +1149,7 @@ p1b2<-ggplot(df_main,aes(group=interaction(method, group)))+
 
 p2b<-ggplot(df_main,aes(group=interaction(method, group)))+
   geom_point(aes(x=x_off,y=rmse_b5,colour =  method),size=2,alpha=alphap )+
-  geom_line(aes(x=x_off,y=rmse_b5,colour =  method),size=.7,alpha=alphap)+#, linetype = "dashed")+
+  geom_line(aes(x=x_off,y=rmse_b5,colour =  method),size=.7,alpha=alphap,linetype = "dashed")+#, linetype = "dashed")+
   facet_grid(r2~vars,labeller = label_parsed,scales="free_y")+
   theme_light()+
   scale_x_continuous(name="", breaks=c(1,2,3,4), labels=parse(text = nms),limits = c(0.75,4.25))+
@@ -809,7 +1167,7 @@ p2b<-ggplot(df_main,aes(group=interaction(method, group)))+
 
 p3b<-ggplot(df_main,aes(group=interaction(method, group)))+
   geom_point(aes(x=x_off,y=covr5*100,colour =  method),size=2,alpha=alphap )+
-  geom_line(aes(x=x_off,y=covr5*100,colour =  method),size=.7,alpha=alphap)+#, linetype = "dashed")+
+  geom_line(aes(x=x_off,y=covr5*100,colour =  method),size=.7,alpha=alphap,linetype = "dashed")+#, linetype = "dashed")+
   facet_grid(r2~vars,labeller = label_parsed,scales="free_y")+
   theme_light()+
   scale_x_continuous(name="", breaks=c(1,2,3,4), labels=parse(text = nms),limits = c(0.75,4.25))+
@@ -827,7 +1185,7 @@ p3b<-ggplot(df_main,aes(group=interaction(method, group)))+
   )
 
  
-pdf("figs/Fig2.pdf",height=15/5*3,width=15/6*4)
+pdf("figs/Fig2.pdf",height=15/5*3,width=15/6*5)
 grid.arrange(p1b,p2b,p3b,nrow=3)
 dev.off()
 
@@ -840,7 +1198,7 @@ dev.off()
 
 ###supp, all scenarios, further results, no jittering
 
-df$r2<-factor(df$r2,levels=c("rho==-0.8","rho==-0.5","rho==-0.2","rho==0.2","rho==0.5","rho==0.8"))
+df$r2<-factor(df$r2,levels=c("rho==-0.5","rho==-0.2"))
 
 ###convergence
 
@@ -848,7 +1206,7 @@ df$r2<-factor(df$r2,levels=c("rho==-0.8","rho==-0.5","rho==-0.2","rho==0.2","rho
 
 p1<-ggplot(df,aes(group=interaction(method, group)))+
   geom_point(aes(x=Nn2,y=bound_rho*100,colour =  method),size=2,alpha=alphap)+
-  geom_line(aes(x=Nn2,y=bound_rho*100,colour =  method),size=.7,alpha=alphap)+
+  geom_line(aes(x=Nn2,y=bound_rho*100,colour =  method),size=.7,alpha=alphap,linetype = "dashed")+
   facet_grid(r2~vars,labeller = label_parsed)+
   theme_light()+
   scale_x_continuous(name="", breaks=c(1,2,3,4), labels=parse(text = nms),limits = c(0.75,4.25))+ #this should be active when res are done!
@@ -860,7 +1218,7 @@ p1<-ggplot(df,aes(group=interaction(method, group)))+
 
 p2<-ggplot(df,aes(group=interaction(method, group)))+
   geom_point(aes(x=Nn2,y=bound_s*100,colour =  method),size=2,alpha=alphap)+
-  geom_line(aes(x=Nn2,y=bound_s*100,colour =  method),size=.7,alpha=alphap)+
+  geom_line(aes(x=Nn2,y=bound_s*100,colour =  method),size=.7,alpha=alphap,linetype = "dashed")+
   facet_grid(r2~vars,labeller = label_parsed)+
   theme_light()+
   scale_x_continuous(name="", breaks=c(1,2,3,4), labels=parse(text = nms),limits = c(0.75,4.25))+
@@ -872,7 +1230,7 @@ p2<-ggplot(df,aes(group=interaction(method, group)))+
 
 p0<-ggplot(df,aes(group=interaction(method, group)))+
   geom_point(aes(x=Nn2,y=bound_t*100,colour =  method),size=2,alpha=alphap)+
-  geom_line(aes(x=Nn2,y=bound_t*100,colour =  method),size=.7,alpha=alphap)+
+  geom_line(aes(x=Nn2,y=bound_t*100,colour =  method),size=.7,alpha=alphap,linetype = "dashed")+
   facet_grid(r2~vars,labeller = label_parsed)+
   theme_light()+
   scale_x_continuous(name="", breaks=c(1,2,3,4), labels=parse(text = nms),limits = c(0.75,4.25))+
@@ -884,7 +1242,7 @@ p0<-ggplot(df,aes(group=interaction(method, group)))+
 
 p01<-ggplot(df,aes(group=interaction(method, group)))+
   geom_point(aes(x=Nn2,y=bound_beta*100,colour =  method),size=2,alpha=alphap)+
-  geom_line(aes(x=Nn2,y=bound_beta*100,colour =  method),size=.7,alpha=alphap)+
+  geom_line(aes(x=Nn2,y=bound_beta*100,colour =  method),size=.7,alpha=alphap,linetype = "dashed")+
   facet_grid(r2~vars,labeller = label_parsed)+
   theme_light()+
   scale_x_continuous(name="", breaks=c(1,2,3,4), labels=parse(text = nms),limits = c(0.75,4.25))+
@@ -896,7 +1254,7 @@ p01<-ggplot(df,aes(group=interaction(method, group)))+
 
 p02<-ggplot(df,aes(group=interaction(method, group)))+
   geom_point(aes(x=Nn2,y=bound_tot*100,colour =  method),size=2,alpha=alphap)+
-  geom_line(aes(x=Nn2,y=bound_tot*100,colour =  method),size=.7,alpha=alphap)+
+  geom_line(aes(x=Nn2,y=bound_tot*100,colour =  method),size=.7,alpha=alphap,linetype = "dashed")+
   facet_grid(r2~vars,labeller = label_parsed)+
   theme_light()+
   scale_x_continuous(name="", breaks=c(1,2,3,4), labels=parse(text = nms),limits = c(0.75,4.25))+
@@ -906,12 +1264,11 @@ p02<-ggplot(df,aes(group=interaction(method, group)))+
   scale_colour_manual(values=dfpallete)+
   theme(legend.title=element_blank())
 
-#this is now too large, we need separate figs!
-#pdf("figs/supp_bound.pdf",height=25,width=22)
-#grid.arrange(p02,p01,p0,p1,p2,nrow=5)
-#dev.off()
+pdf("figs/supp_bound.pdf",height=25,width=22)
+grid.arrange(p02,p01,p0,p1,p2,nrow=5)
+dev.off()
 
-
+if (plot_ind){
 pdf("figs/supp_bound_all.pdf",height=20,width=24)
 p02
 dev.off()
@@ -932,16 +1289,16 @@ dev.off()
 pdf("figs/supp_bound_sd.pdf",height=20,width=22)
 p2
 dev.off()
-
+}
 
 ##estimation of D
 
-df2$r2<-factor(df2$r2,levels=c("rho==-0.8","rho==-0.5","rho==-0.2","rho==0.2","rho==0.5","rho==0.8"))
+df2$r2<-factor(df2$r2,levels=c("rho==-0.5","rho==-0.2"))
 
 
 pp<-ggplot(df2,aes(group=interaction(method, group)))+
   geom_point(aes(x=Nn2,y=prial,colour =  method),size=2,alpha=alphap)+
-  geom_line(aes(x=Nn2,y=prial,colour =  method),size=0.7,alpha=alphap)+
+  geom_line(aes(x=Nn2,y=prial,colour =  method),size=0.7,alpha=alphap,linetype = "dashed")+
   facet_grid(r2~vars,scales="free_y",labeller = label_parsed)+
   theme_light()+
   scale_x_continuous(name="", breaks=c(1,2,3,4), labels=parse(text = nms),limits = c(0.75,4.25))+
@@ -954,7 +1311,7 @@ pp<-ggplot(df2,aes(group=interaction(method, group)))+
 
 pp2<-ggplot(df2,aes(group=interaction(method, group)))+
   geom_point(aes(x=Nn2,y=prial2,colour =  method),size=2,alpha=alphap)+
-  geom_line(aes(x=Nn2,y=prial2,colour =  method),size=0.7,alpha=alphap)+
+  geom_line(aes(x=Nn2,y=prial2,colour =  method),size=0.7,alpha=alphap,linetype = "dashed")+
   facet_grid(r2~vars,scales="free_y",labeller = label_parsed)+
   theme_light()+
   scale_x_continuous(name="", breaks=c(1,2,3,4), labels=parse(text = nms),limits = c(0.75,4.25))+
@@ -973,7 +1330,7 @@ pp2<-ggplot(df2,aes(group=interaction(method, group)))+
 
 ploss<-ggplot(df,aes(group=interaction(method, group)))+
   geom_point(aes(x=Nn2,y= log(mloss,10) ,colour =  method),size=2,alpha=alphap)+
-  geom_line(aes(x=Nn2,y= log(mloss,10) ,colour =  method),size=.7,alpha=alphap)+
+  geom_line(aes(x=Nn2,y= log(mloss,10) ,colour =  method),size=.7,alpha=alphap,linetype = "dashed")+
   facet_grid(r2~vars,labeller = label_parsed,scales="free_y")+
   theme_light()+
   scale_x_continuous(name="", breaks=c(1,2,3,4), labels=parse(text = nms),limits = c(0.75,4.25))+
@@ -986,7 +1343,7 @@ ploss<-ggplot(df,aes(group=interaction(method, group)))+
 
 ploss2<-ggplot(df,aes(group=interaction(method, group)))+
   geom_point(aes(x=Nn2,y= log(mloss2,10) ,colour =  method),size=2,alpha=alphap)+
-  geom_line(aes(x=Nn2,y= log(mloss2,10) ,colour =  method),size=.7,alpha=alphap)+
+  geom_line(aes(x=Nn2,y= log(mloss2,10) ,colour =  method),size=.7,alpha=alphap,linetype = "dashed")+
   facet_grid(r2~vars,labeller = label_parsed,scales="free_y")+
   theme_light()+
   scale_x_continuous(name="", breaks=c(1,2,3,4), labels=parse(text = nms),limits = c(0.75,4.25))+
@@ -997,16 +1354,17 @@ ploss2<-ggplot(df,aes(group=interaction(method, group)))+
   scale_colour_manual(values=dfpallete)+
   theme(legend.title=element_blank())
 
-#if (show.L2){
-#pdf("figs/supp_loss.pdf",height=25,width=22)
-#grid.arrange(ploss,pp,ploss2,pp2,nrow=4)
-#dev.off()
-#} else{
-#  pdf("figs/supp_loss.pdf",height=25,width=22)
-#  grid.arrange(ploss,pp,nrow=4)
-#  dev.off()
-#}
+if (show.L2){
+pdf("figs/supp_loss.pdf",height=25,width=22)
+grid.arrange(ploss,pp,ploss2,pp2,nrow=4)
+dev.off()
+} else{
+  pdf("figs/supp_loss.pdf",height=10,width=22)
+  grid.arrange(ploss,pp,nrow=2)
+  dev.off()
+}
 
+if (plot_ind){
 pdf("figs/supp_loss_loss.pdf",height=20,width=24)
 ploss
 dev.off()
@@ -1014,13 +1372,13 @@ dev.off()
 pdf("figs/supp_loss_prial.pdf",height=20,width=24)
 pp
 dev.off()
-
+}
 
 ##bias,rmse, cover, width for beta5
 
 p1b<-ggplot(df,aes(group=interaction(method, group)))+
   geom_point(aes(x=Nn2,y=bias_b5,colour =  method),size=2,alpha=alphap)+
-  geom_line(aes(x=Nn2,y=bias_b5,colour =  method),size=.7,alpha=alphap)+
+  geom_line(aes(x=Nn2,y=bias_b5,colour =  method),size=.7,alpha=alphap,linetype = "dashed")+
   facet_grid(r2~vars,labeller = label_parsed,scales="free_y")+
   theme_light()+
   scale_x_continuous(name="", breaks=c(1,2,3,4), labels=parse(text = nms),limits = c(0.75,4.25))+
@@ -1032,7 +1390,7 @@ p1b<-ggplot(df,aes(group=interaction(method, group)))+
 
 p1b<-ggplot(df,aes(group=interaction(method, group)))+
   geom_point(aes(x=Nn2,y=log10(abs(bias_b5)),colour =  method),size=2,alpha=alphap)+
-  geom_line(aes(x=Nn2,y=log10(abs(bias_b5)),colour =  method),size=.7,alpha=alphap)+
+  geom_line(aes(x=Nn2,y=log10(abs(bias_b5)),colour =  method),size=.7,alpha=alphap,linetype = "dashed")+
   facet_grid(r2~vars,labeller = label_parsed,scales="free_y")+
   theme_light()+
   scale_x_continuous(name="", breaks=c(1,2,3,4), labels=parse(text = nms),limits = c(0.75,4.25))+
@@ -1044,7 +1402,7 @@ p1b<-ggplot(df,aes(group=interaction(method, group)))+
 
 p2b<-ggplot(df,aes(group=interaction(method, group)))+
   geom_point(aes(x=Nn2,y=log(rmse_b5,base=10),colour =  method),size=2,alpha=alphap)+
-  geom_line(aes(x=Nn2,y=log(rmse_b5,base=10),colour =  method),size=.7,alpha=alphap)+
+  geom_line(aes(x=Nn2,y=log(rmse_b5,base=10),colour =  method),size=.7,alpha=alphap,linetype = "dashed")+
   facet_grid(r2~vars,labeller = label_parsed,scales="free_y")+
   theme_light()+
   scale_x_continuous(name="", breaks=c(1,2,3,4), labels=parse(text = nms),limits = c(0.75,4.25))+
@@ -1056,7 +1414,7 @@ p2b<-ggplot(df,aes(group=interaction(method, group)))+
 
 p3b<-ggplot(df,aes(group=interaction(method, group)))+
   geom_point(aes(x=Nn2,y=covr5*100,colour =  method),size=2,alpha=alphap)+
-  geom_line(aes(x=Nn2,y=covr5*100,colour =  method),size=.7,alpha=alphap)+
+  geom_line(aes(x=Nn2,y=covr5*100,colour =  method),size=.7,alpha=alphap,linetype = "dashed")+
   facet_grid(r2~vars,labeller = label_parsed,scales="free_y")+
   theme_light()+
   scale_x_continuous(name="", breaks=c(1,2,3,4), labels=parse(text = nms),limits = c(0.75,4.25))+
@@ -1070,7 +1428,7 @@ p3b<-ggplot(df,aes(group=interaction(method, group)))+
 
 p4b<-ggplot(df,aes(group=interaction(method, group)))+
   geom_point(aes(x=Nn2,y=log(widths_5,base=10),colour =  method),size=2,alpha=alphap)+
-  geom_line(aes(x=Nn2,y=log(widths_5,base=10),colour =  method),size=.7,alpha=alphap)+
+  geom_line(aes(x=Nn2,y=log(widths_5,base=10),colour =  method),size=.7,alpha=alphap,linetype = "dashed")+
   facet_grid(r2~vars,labeller = label_parsed,scales="free_y")+
   theme_light()+
   scale_x_continuous(name="", breaks=c(1,2,3,4), labels=parse(text = nms),limits = c(0.75,4.25))+
@@ -1083,11 +1441,11 @@ p4b<-ggplot(df,aes(group=interaction(method, group)))+
    #        alpha = .2)
 
 
-#pdf("figs/supp_beta5.pdf",height=25,width=22)
-#grid.arrange(p1b,p2b,p3b,p4b,nrow=4)
-#dev.off()
+pdf("figs/supp_beta5.pdf",height=20,width=22)
+grid.arrange(p1b,p2b,p3b,p4b,nrow=4)
+dev.off()
 
-
+if (plot_ind){
 pdf("figs/supp_beta5_1.pdf",height=20,width=24)
 p1b
 dev.off()
@@ -1103,13 +1461,13 @@ dev.off()
 pdf("figs/supp_beta5_4.pdf",height=20,width=24)
 p4b
 dev.off()
-
+}
 
 ##bias, mse,...for other betas
 
 p1b1<-ggplot(df,aes(group=interaction(method, group)))+
   geom_point(aes(x=Nn2,y=bias_b1,colour =  method),size=2,alpha=alphap)+
-  geom_line(aes(x=Nn2,y=bias_b1,colour =  method),size=.7,alpha=alphap)+
+  geom_line(aes(x=Nn2,y=bias_b1,colour =  method),size=.7,alpha=alphap,linetype = "dashed")+
   facet_grid(r2~vars,labeller = label_parsed,scales="free_y")+
   theme_light()+
   scale_x_continuous(name="", breaks=c(1,2,3,4), labels=parse(text = nms),limits = c(0.75,4.25))+
@@ -1121,7 +1479,7 @@ p1b1<-ggplot(df,aes(group=interaction(method, group)))+
 
 p1b1<-ggplot(df,aes(group=interaction(method, group)))+
   geom_point(aes(x=Nn2,y=log10(abs(bias_b1)),colour =  method),size=2,alpha=alphap)+
-  geom_line(aes(x=Nn2,y=log10(abs(bias_b1)),colour =  method),size=.7,alpha=alphap)+
+  geom_line(aes(x=Nn2,y=log10(abs(bias_b1)),colour =  method),size=.7,alpha=alphap,linetype = "dashed")+
   facet_grid(r2~vars,labeller = label_parsed,scales="free_y")+
   theme_light()+
   scale_x_continuous(name="", breaks=c(1,2,3,4), labels=parse(text = nms),limits = c(0.75,4.25))+
@@ -1134,7 +1492,7 @@ p1b1<-ggplot(df,aes(group=interaction(method, group)))+
 
 p2b1<-ggplot(df,aes(group=interaction(method, group)))+
   geom_point(aes(x=Nn2,y=log(rmse_b1,10),colour =  method),size=2,alpha=alphap)+
-  geom_line(aes(x=Nn2,y=log(rmse_b1,10),colour =  method),size=.7,alpha=alphap)+
+  geom_line(aes(x=Nn2,y=log(rmse_b1,10),colour =  method),size=.7,alpha=alphap,linetype = "dashed")+
   facet_grid(r2~vars,labeller = label_parsed,scales="free_y")+
   theme_light()+
   scale_x_continuous(name="", breaks=c(1,2,3,4), labels=parse(text = nms),limits = c(0.75,4.25))+
@@ -1147,7 +1505,7 @@ p2b1<-ggplot(df,aes(group=interaction(method, group)))+
 
 p3b1<-ggplot(df,aes(group=interaction(method, group)))+
   geom_point(aes(x=Nn2,y=covr1*100,colour =  method),size=2,alpha=alphap)+
-  geom_line(aes(x=Nn2,y=covr1*100,colour =  method),size=.7,alpha=alphap)+
+  geom_line(aes(x=Nn2,y=covr1*100,colour =  method),size=.7,alpha=alphap,linetype = "dashed")+
   facet_grid(r2~vars,labeller = label_parsed,scales="free_y")+
   theme_light()+
   scale_x_continuous(name="", breaks=c(1,2,3,4), labels=parse(text = nms),limits = c(0.75,4.25))+
@@ -1161,7 +1519,7 @@ p3b1<-ggplot(df,aes(group=interaction(method, group)))+
 
 p4b1<-ggplot(df,aes(group=interaction(method, group)))+
   geom_point(aes(x=Nn2,y=log(widths_1,base=10),colour =  method),size=2,alpha=alphap)+
-  geom_line(aes(x=Nn2,y=log(widths_1,base=10),colour =  method),size=.7,alpha=alphap)+
+  geom_line(aes(x=Nn2,y=log(widths_1,base=10),colour =  method),size=.7,alpha=alphap,linetype = "dashed")+
   facet_grid(r2~vars,labeller = label_parsed,scales="free_y")+
   theme_light()+
   scale_x_continuous(name="", breaks=c(1,2,3,4), labels=parse(text = nms),limits = c(0.75,4.25))+
@@ -1174,10 +1532,11 @@ p4b1<-ggplot(df,aes(group=interaction(method, group)))+
 #        alpha = .2)
 
 
-#pdf("figs/supp_beta1.pdf",height=25,width=22)
-#grid.arrange(p1b1,p2b1,p3b1,p4b1,nrow=4)
-#dev.off()
+pdf("figs/supp_beta1.pdf",height=20,width=22)
+grid.arrange(p1b1,p2b1,p3b1,p4b1,nrow=4)
+dev.off()
 
+if (plot_ind){
 pdf("figs/supp_beta1_1.pdf",height=20,width=24)
 p1b1
 dev.off()
@@ -1193,14 +1552,14 @@ dev.off()
 pdf("figs/supp_beta1_4.pdf",height=20,width=24)
 p4b1
 dev.off()
-
+}
 
 
 
 
 p1b2<-ggplot(df,aes(group=interaction(method, group)))+
   geom_point(aes(x=Nn2,y=bias_b2,colour =  method),size=2,alpha=alphap)+
-  geom_line(aes(x=Nn2,y=bias_b2,colour =  method),size=.7,alpha=alphap)+
+  geom_line(aes(x=Nn2,y=bias_b2,colour =  method),size=.7,alpha=alphap,linetype = "dashed")+
   facet_grid(r2~vars,labeller = label_parsed,scales="free_y")+
   theme_light()+
   scale_x_continuous(name="", breaks=c(1,2,3,4), labels=parse(text = nms),limits = c(0.75,4.25))+
@@ -1212,7 +1571,7 @@ p1b2<-ggplot(df,aes(group=interaction(method, group)))+
 
 p1b2<-ggplot(df,aes(group=interaction(method, group)))+
   geom_point(aes(x=Nn2,y=log10(abs(bias_b2)),colour =  method),size=2,alpha=alphap)+
-  geom_line(aes(x=Nn2,y=log10(abs(bias_b2)),colour =  method),size=.7,alpha=alphap)+
+  geom_line(aes(x=Nn2,y=log10(abs(bias_b2)),colour =  method),size=.7,alpha=alphap,linetype = "dashed")+
   facet_grid(r2~vars,labeller = label_parsed,scales="free_y")+
   theme_light()+
   scale_x_continuous(name="", breaks=c(1,2,3,4), labels=parse(text = nms),limits = c(0.75,4.25))+
@@ -1225,7 +1584,7 @@ p1b2<-ggplot(df,aes(group=interaction(method, group)))+
 
 p2b2<-ggplot(df,aes(group=interaction(method, group)))+
   geom_point(aes(x=Nn2,y=log(rmse_b2,10),colour =  method),size=2,alpha=alphap)+
-  geom_line(aes(x=Nn2,y=log(rmse_b2,10),colour =  method),size=.7,alpha=alphap)+
+  geom_line(aes(x=Nn2,y=log(rmse_b2,10),colour =  method),size=.7,alpha=alphap,linetype = "dashed")+
   facet_grid(r2~vars,labeller = label_parsed,scales="free_y")+
   theme_light()+
   scale_x_continuous(name="", breaks=c(1,2,3,4), labels=parse(text = nms),limits = c(0.75,4.25))+
@@ -1237,7 +1596,7 @@ p2b2<-ggplot(df,aes(group=interaction(method, group)))+
 
 p3b2<-ggplot(df,aes(group=interaction(method, group)))+
   geom_point(aes(x=Nn2,y=covr2*100,colour =  method),size=2,alpha=alphap)+
-  geom_line(aes(x=Nn2,y=covr2*100,colour =  method),size=.7,alpha=alphap)+
+  geom_line(aes(x=Nn2,y=covr2*100,colour =  method),size=.7,alpha=alphap,linetype = "dashed")+
   facet_grid(r2~vars,labeller = label_parsed,scales="free_y")+
   theme_light()+
   scale_x_continuous(name="", breaks=c(1,2,3,4), labels=parse(text = nms),limits = c(0.75,4.25))+
@@ -1251,7 +1610,7 @@ p3b2<-ggplot(df,aes(group=interaction(method, group)))+
 
 p4b2<-ggplot(df,aes(group=interaction(method, group)))+
   geom_point(aes(x=Nn2,y=log(widths_2,base=10),colour =  method),size=2,alpha=alphap)+
-  geom_line(aes(x=Nn2,y=log(widths_2,base=10),colour =  method),size=.7,alpha=alphap)+
+  geom_line(aes(x=Nn2,y=log(widths_2,base=10),colour =  method),size=.7,alpha=alphap,linetype = "dashed")+
   facet_grid(r2~vars,labeller = label_parsed,scales="free_y")+
   theme_light()+
   scale_x_continuous(name="", breaks=c(1,2,3,4), labels=parse(text = nms),limits = c(0.75,4.25))+
@@ -1264,10 +1623,11 @@ p4b2<-ggplot(df,aes(group=interaction(method, group)))+
 #        alpha = .2)
 
 
-#pdf("figs/supp_beta2.pdf",height=25,width=22)
-#grid.arrange(p1b2,p2b2,p3b2,p4b2,nrow=4)
-#dev.off()
+pdf("figs/supp_beta2.pdf",height=20,width=22)
+grid.arrange(p1b2,p2b2,p3b2,p4b2,nrow=4)
+dev.off()
 
+if (plot_ind){
 pdf("figs/supp_beta2_1.pdf",height=20,width=24)
 p1b2
 dev.off()
@@ -1283,7 +1643,7 @@ dev.off()
 pdf("figs/supp_beta2_4.pdf",height=20,width=24)
 p4b2
 dev.off()
-
+}
 
 
 
@@ -1291,7 +1651,7 @@ dev.off()
 
 p1b3<-ggplot(df,aes(group=interaction(method, group)))+
   geom_point(aes(x=Nn2,y=bias_b3,colour =  method),size=2,alpha=alphap)+
-  geom_line(aes(x=Nn2,y=bias_b3,colour =  method),size=.7,alpha=alphap)+
+  geom_line(aes(x=Nn2,y=bias_b3,colour =  method),size=.7,alpha=alphap,linetype = "dashed")+
   facet_grid(r2~vars,labeller = label_parsed,scales="free_y")+
   theme_light()+
   scale_x_continuous(name="", breaks=c(1,2,3,4), labels=parse(text = nms),limits = c(0.75,4.25))+
@@ -1306,7 +1666,7 @@ p1b3<-ggplot(df,aes(group=interaction(method, group)))+
 
 p1b3<-ggplot(df,aes(group=interaction(method, group)))+
   geom_point(aes(x=Nn2,y=log10(abs(bias_b3)),colour =  method),size=2,alpha=alphap)+
-  geom_line(aes(x=Nn2,y=log10(abs(bias_b3)),colour =  method),size=.7,alpha=alphap)+
+  geom_line(aes(x=Nn2,y=log10(abs(bias_b3)),colour =  method),size=.7,alpha=alphap,linetype = "dashed")+
   facet_grid(r2~vars,labeller = label_parsed,scales="free_y")+
   theme_light()+
   scale_x_continuous(name="", breaks=c(1,2,3,4), labels=parse(text = nms),limits = c(0.75,4.25))+
@@ -1320,7 +1680,7 @@ p1b3<-ggplot(df,aes(group=interaction(method, group)))+
 
 p2b3<-ggplot(df,aes(group=interaction(method, group)))+
   geom_point(aes(x=Nn2,y=log(rmse_b3,10),colour =  method),size=2,alpha=alphap)+
-  geom_line(aes(x=Nn2,y=log(rmse_b3,10),colour =  method),size=.7,alpha=alphap)+
+  geom_line(aes(x=Nn2,y=log(rmse_b3,10),colour =  method),size=.7,alpha=alphap,linetype = "dashed")+
   facet_grid(r2~vars,labeller = label_parsed,scales="free_y")+
   theme_light()+
   scale_x_continuous(name="", breaks=c(1,2,3,4), labels=parse(text = nms),limits = c(0.75,4.25))+
@@ -1332,7 +1692,7 @@ p2b3<-ggplot(df,aes(group=interaction(method, group)))+
 
 p3b3<-ggplot(df,aes(group=interaction(method, group)))+
   geom_point(aes(x=Nn2,y=covr3*100,colour =  method),size=2,alpha=alphap)+
-  geom_line(aes(x=Nn2,y=covr3*100,colour =  method),size=.7,alpha=alphap)+
+  geom_line(aes(x=Nn2,y=covr3*100,colour =  method),size=.7,alpha=alphap,linetype = "dashed")+
   facet_grid(r2~vars,labeller = label_parsed,scales="free_y")+
   theme_light()+
   scale_x_continuous(name="", breaks=c(1,2,3,4), labels=parse(text = nms),limits = c(0.75,4.25))+
@@ -1346,7 +1706,7 @@ p3b3<-ggplot(df,aes(group=interaction(method, group)))+
 
 p4b3<-ggplot(df,aes(group=interaction(method, group)))+
   geom_point(aes(x=Nn2,y=log(widths_3,base=10),colour =  method),size=2,alpha=alphap)+
-  geom_line(aes(x=Nn2,y=log(widths_3,base=10),colour =  method),size=.7,alpha=alphap)+
+  geom_line(aes(x=Nn2,y=log(widths_3,base=10),colour =  method),size=.7,alpha=alphap,linetype = "dashed")+
   facet_grid(r2~vars,labeller = label_parsed,scales="free_y")+
   theme_light()+
   scale_x_continuous(name="", breaks=c(1,2,3,4), labels=parse(text = nms),limits = c(0.75,4.25))+
@@ -1359,11 +1719,11 @@ p4b3<-ggplot(df,aes(group=interaction(method, group)))+
 #        alpha = .2)
 
 
-#pdf("figs/supp_beta3.pdf",height=25,width=22)
-#grid.arrange(p1b3,p2b3,p3b3,p4b3,nrow=4)
-#dev.off()
+pdf("figs/supp_beta3.pdf",height=20,width=22)
+grid.arrange(p1b3,p2b3,p3b3,p4b3,nrow=4)
+dev.off()
 
-
+if (plot_ind){
 
 pdf("figs/supp_beta3_1.pdf",height=20,width=24)
 p1b3
@@ -1382,12 +1742,12 @@ p4b3
 dev.off()
 
 
-
+}
 
 
 p1b4<-ggplot(df,aes(group=interaction(method, group)))+
   geom_point(aes(x=Nn2,y=bias_b4,colour =  method),size=2,alpha=alphap)+
-  geom_line(aes(x=Nn2,y=bias_b4,colour =  method),size=.7,alpha=alphap)+
+  geom_line(aes(x=Nn2,y=bias_b4,colour =  method),size=.7,alpha=alphap,linetype = "dashed")+
   facet_grid(r2~vars,labeller = label_parsed,scales="free_y")+
   theme_light()+
   scale_x_continuous(name="", breaks=c(1,2,3,4), labels=parse(text = nms),limits = c(0.75,4.25))+
@@ -1399,7 +1759,7 @@ p1b4<-ggplot(df,aes(group=interaction(method, group)))+
 
 p1b4<-ggplot(df,aes(group=interaction(method, group)))+
   geom_point(aes(x=Nn2,y=log10(abs(bias_b4)),colour =  method),size=2,alpha=alphap)+
-  geom_line(aes(x=Nn2,y=log10(abs(bias_b4)),colour =  method),size=.7,alpha=alphap)+
+  geom_line(aes(x=Nn2,y=log10(abs(bias_b4)),colour =  method),size=.7,alpha=alphap,linetype = "dashed")+
   facet_grid(r2~vars,labeller = label_parsed,scales="free_y")+
   theme_light()+
   scale_x_continuous(name="", breaks=c(1,2,3,4), labels=parse(text = nms),limits = c(0.75,4.25))+
@@ -1415,7 +1775,7 @@ p1b4<-ggplot(df,aes(group=interaction(method, group)))+
 
 p2b4<-ggplot(df,aes(group=interaction(method, group)))+
   geom_point(aes(x=Nn2,y=log(rmse_b4,10),colour =  method),size=2,alpha=alphap)+
-  geom_line(aes(x=Nn2,y=log(rmse_b4,10),colour =  method),size=.7,alpha=alphap)+
+  geom_line(aes(x=Nn2,y=log(rmse_b4,10),colour =  method),size=.7,alpha=alphap,linetype = "dashed")+
   facet_grid(r2~vars,labeller = label_parsed,scales="free_y")+
   theme_light()+
   scale_x_continuous(name="", breaks=c(1,2,3,4), labels=parse(text = nms),limits = c(0.75,4.25))+
@@ -1427,7 +1787,7 @@ p2b4<-ggplot(df,aes(group=interaction(method, group)))+
 
 p3b4<-ggplot(df,aes(group=interaction(method, group)))+
   geom_point(aes(x=Nn2,y=covr4*100,colour =  method),size=2,alpha=alphap)+
-  geom_line(aes(x=Nn2,y=covr4*100,colour =  method),size=.7,alpha=alphap)+
+  geom_line(aes(x=Nn2,y=covr4*100,colour =  method),size=.7,alpha=alphap,linetype = "dashed")+
   facet_grid(r2~vars,labeller = label_parsed,scales="free_y")+
   theme_light()+
   scale_x_continuous(name="", breaks=c(1,2,3,4), labels=parse(text = nms),limits = c(0.75,4.25))+
@@ -1442,7 +1802,7 @@ p3b4<-ggplot(df,aes(group=interaction(method, group)))+
 
 p4b4<-ggplot(df,aes(group=interaction(method, group)))+
   geom_point(aes(x=Nn2,y=log(widths_4,base=10),colour =  method),size=2,alpha=alphap)+
-  geom_line(aes(x=Nn2,y=log(widths_4,base=10),colour =  method),size=.7,alpha=alphap)+
+  geom_line(aes(x=Nn2,y=log(widths_4,base=10),colour =  method),size=.7,alpha=alphap,linetype = "dashed")+
   facet_grid(r2~vars,labeller = label_parsed,scales="free_y")+
   theme_light()+
   scale_x_continuous(name="", breaks=c(1,2,3,4), labels=parse(text = nms),limits = c(0.75,4.25))+
@@ -1456,12 +1816,12 @@ p4b4<-ggplot(df,aes(group=interaction(method, group)))+
 
 
 
-#pdf("figs/supp_beta4.pdf",height=25,width=22)
-#grid.arrange(p1b4,p2b4,p3b4,p4b4,nrow=4)
-#dev.off()
+pdf("figs/supp_beta4.pdf",height=20,width=22)
+grid.arrange(p1b4,p2b4,p3b4,p4b4,nrow=4)
+dev.off()
 
 
-
+if (plot_ind){
 pdf("figs/supp_beta4_1.pdf",height=20,width=24)
 p1b4
 dev.off()
@@ -1477,7 +1837,104 @@ dev.off()
 pdf("figs/supp_beta4_4.pdf",height=20,width=24)
 p4b4
 dev.off()
+}
 
+
+
+
+p1b0<-ggplot(df,aes(group=interaction(method, group)))+
+  geom_point(aes(x=Nn2,y=bias_b0,colour =  method),size=2,alpha=alphap)+
+  geom_line(aes(x=Nn2,y=bias_b0,colour =  method),size=.7,alpha=alphap,linetype = "dashed")+
+  facet_grid(r2~vars,labeller = label_parsed,scales="free_y")+
+  theme_light()+
+  scale_x_continuous(name="", breaks=c(1,2,3,4), labels=parse(text = nms),limits = c(0.75,4.25))+
+  ylab("bias")+
+  theme(axis.text.x = element_text(  vjust = 0.5, hjust=0.5))+
+  geom_hline(yintercept=0)+
+  scale_colour_manual(values=dfpallete)+
+  theme(legend.title=element_blank())
+
+p1b0<-ggplot(df,aes(group=interaction(method, group)))+
+  geom_point(aes(x=Nn2,y=log10(abs(bias_b0)),colour =  method),size=2,alpha=alphap)+
+  geom_line(aes(x=Nn2,y=log10(abs(bias_b0)),colour =  method),size=.7,alpha=alphap,linetype = "dashed")+
+  facet_grid(r2~vars,labeller = label_parsed,scales="free_y")+
+  theme_light()+
+  scale_x_continuous(name="", breaks=c(1,2,3,4), labels=parse(text = nms),limits = c(0.75,4.25))+
+  ylab(expression(log[10]*abs(bias)))+
+  theme(axis.text.x = element_text(  vjust = 0.5, hjust=0.5))+
+  #geom_hline(yintercept=0)+
+  scale_colour_manual(values=dfpallete)+
+  theme(legend.title=element_blank())
+
+
+
+
+
+p2b0<-ggplot(df,aes(group=interaction(method, group)))+
+  geom_point(aes(x=Nn2,y=log(rmse_b0,10),colour =  method),size=2,alpha=alphap)+
+  geom_line(aes(x=Nn2,y=log(rmse_b0,10),colour =  method),size=.7,alpha=alphap,linetype = "dashed")+
+  facet_grid(r2~vars,labeller = label_parsed,scales="free_y")+
+  theme_light()+
+  scale_x_continuous(name="", breaks=c(1,2,3,4), labels=parse(text = nms),limits = c(0.75,4.25))+
+  ylab(expression(log[10](RMSE)))+
+  theme(axis.text.x = element_text( vjust = 0.5, hjust=0.5))+
+  
+  scale_colour_manual(values=dfpallete)+
+  theme(legend.title=element_blank())
+
+p3b0<-ggplot(df,aes(group=interaction(method, group)))+
+  geom_point(aes(x=Nn2,y=covr0*100,colour =  method),size=2,alpha=alphap)+
+  geom_line(aes(x=Nn2,y=covr0*100,colour =  method),size=.7,alpha=alphap,linetype = "dashed")+
+  facet_grid(r2~vars,labeller = label_parsed,scales="free_y")+
+  theme_light()+
+  scale_x_continuous(name="", breaks=c(1,2,3,4), labels=parse(text = nms),limits = c(0.75,4.25))+
+  ylab("coverage (%)")+
+  theme(axis.text.x = element_text(  vjust = 0.5, hjust=0.5))+
+  geom_hline(yintercept=95)+
+  scale_colour_manual(values=dfpallete)+
+  theme(legend.title=element_blank())+
+  annotate("rect", xmin = 1, xmax = 4, ymin =95-sqrt(0.05*0.95/1000)*2*100 , ymax =95+sqrt(0.05*0.95/1000)*2*100 ,
+           alpha = .2)
+
+
+p4b0<-ggplot(df,aes(group=interaction(method, group)))+
+  geom_point(aes(x=Nn2,y=log(widths_0,base=10),colour =  method),size=2,alpha=alphap)+
+  geom_line(aes(x=Nn2,y=log(widths_0,base=10),colour =  method),size=.7,alpha=alphap,linetype = "dashed")+
+  facet_grid(r2~vars,labeller = label_parsed,scales="free_y")+
+  theme_light()+
+  scale_x_continuous(name="", breaks=c(1,2,3,4), labels=parse(text = nms),limits = c(0.75,4.25))+
+  ylab("log mean CI width")+
+  theme(axis.text.x = element_text(  vjust = 0.5, hjust=0.5))+
+  # geom_hline(yintercept=95)+
+  scale_colour_manual(values=dfpallete)+
+  theme(legend.title=element_blank())#+
+#annotate("rect", xmin = 1, xmax = 4, ymin =95-sqrt(0.05*0.95/1000)*2*100 , ymax =95+sqrt(0.05*0.95/1000)*2*100 ,
+#        alpha = .2)
+
+
+
+pdf("figs/supp_beta0.pdf",height=20,width=22)
+grid.arrange(p1b0,p2b0,p3b0,p4b0,nrow=4)
+dev.off()
+
+
+if (plot_ind){
+  pdf("figs/supp_beta0_1.pdf",height=20,width=24)
+  p1b0
+  dev.off()
+  
+  pdf("figs/supp_beta0_2.pdf",height=20,width=24)
+  p2b0
+  dev.off()
+  
+  pdf("figs/supp_beta0_3.pdf",height=20,width=24)
+  p3b0
+  dev.off()
+  
+  pdf("figs/supp_beta0_4.pdf",height=20,width=24)
+  p4b0
+  dev.off()
+}
 
 
 ####other plots, not needed
