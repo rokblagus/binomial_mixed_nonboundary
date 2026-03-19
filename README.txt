@@ -26,7 +26,7 @@ source_sim_getSe.R: this script is used by scriptses_i.R to perform 1000 simulat
 
 ./simulated_data/results: [folder that contains all txt files resulting from runing script_i.R and scriptses_i.R, i in 1,...,80]
 
-session infor for real data illustration (performed on PC):
+session info for real data illustration (performed on PC):
 R version 4.5.2 (2025-10-31 ucrt)
 Platform: x86_64-w64-mingw32/x64
 Running under: Windows 11 x64 (build 26100)
