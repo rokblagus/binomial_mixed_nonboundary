@@ -7,16 +7,24 @@ This folder contains the following data and files that can be used to reproduce 
 It contains two subfolders:
 
 ./real_data/: [folder for reproducing the results reported in Section "Motivating example", "Illustration"  and Supplementary Material]
-script_real.R: running this script performs the analysis for the real data example. The script also produces the figures reported in the manuscript/Supplementary Material. Running the script requires the following R packages: MASS, brglm2, optimx, numDeriv, glmmTMB, lme4, xtable, blme, mvtnorm, dplyr, ggplot2, tidyr. The script also uses the file dataBirds.txt, which contains the dataset. 
+script_real_package.R: running this script performs the analysis for the real data example. The script also produces the figures reported in the manuscript/Supplementary Material. Running the script requires the following R packages: AUGglmmTMB,MASS, brglm2, optimx, numDeriv, glmmTMB, lme4, xtable, blme, mvtnorm, dplyr, ggplot2, tidyr. The script also uses the file dataBirds.txt, which contains the dataset. 
 dataBirds.txt: the dataset.
-mv_MSPAL_illustration.R: the source code to fit SPM method, obtained from gitHub (https://github.com/psterzinger/softpen_supplementary), adapted by Rok Blagus to allow the calculation of SEs.
+mv_MSPAL_illustration_2.R: the source code to fit SPM method, obtained from gitHub (https://github.com/psterzinger/softpen_supplementary), adapted by Rok Blagus to allow the calculation of SEs.
+AUGglmmTMB_0.1.0.tar.gz: the R package AUGglmmTMB that implements MPL.
+figure_real.pdf: coefficient paths (supplementary material)
+figure_real1.pdf: coefficient paths (main document)
+lims.pdf: conditional log-likelihood by tau (supplementary material)
+lims1.pdf: conditional log-likelihood by tau (main document)
 
 ./simulated_data/: [folder for reproducing the results reported in Section "Simulation study" and Supplementary Material]
-make_scripts.R: running this scipt produces script_i.R, i in 1,...,360 and scriptses_i.R
-read_res.R: running this script reads all results (the txt files resulting from runing script_i.R and scriptses_i.R, i in 1,...,360), produces the figures and tables reported in the manuscript and Supplementary Material. Running this script requires the following R packages: ggplot2 and gridExtra.
+make_scripts.R: running this scipt produces script_i.R, i in 1,...,80 and scriptses_i.R
+read_res.R: running this script reads all results (the txt files resulting from runing script_i.R and scriptses_i.R, i in 1,...,80), produces the figures and tables reported in the manuscript and Supplementary Material. Running this script requires the following R packages: ggplot2 and gridExtra.
 source_sim.R: this script is used by script_i.R to perform 1000 simulation runs for the specified simulation scenario: this is the core function to reproduce the simulation study. Here, the data according to the specified scenario are created and different methods are used to estimate the model's parameters. The results for each simulation scenarion and method are saved as txt files, where rows correspond to different simulation runs, and columns to the estimated parameters. Running this script requires the following R packages: MASS, brglm2, optimx, lme4, numDeriv, glmmTMB, mvtnorm, and blme. We performed this part of the analysis in the cluster of CentOS based containers
 source_sim_getSe.R: this script is used by scriptses_i.R to perform 1000 simulation runs for the specified simulation scenario. These results are required to evaluate if the estimated fixed effects are on the boundary, as suggested by Geroldinger et al. (see the manuscript).
 
+./simulated_data/figs: [folder that contains all figures, in pdf format, shown the manuscript and Supplementary Material]
+
+./simulated_data/results: [folder that contains all txt files resulting from runing script_i.R and scriptses_i.R, i in 1,...,80]
 
 session infor for real data illustration (performed on PC):
 R version 4.5.2 (2025-10-31 ucrt)
