@@ -7,10 +7,9 @@ This folder contains the following data and files that can be used to reproduce 
 It contains two subfolders:
 
 ./real_data/: [folder for reproducing the results reported in Section "Motivating example", "Illustration"  and Supplementary Material]
-script_real_package.R: running this script performs the analysis for the real data example. The script also produces the figures reported in the manuscript/Supplementary Material. Running the script requires the following R packages: AUGglmmTMB,MASS, brglm2, optimx, numDeriv, glmmTMB, lme4, xtable, blme, mvtnorm, dplyr, ggplot2, tidyr. The script also uses the file dataBirds.txt, which contains the dataset. 
-dataBirds.txt: the dataset.
+script_real_package.R: running this script performs the analysis for the real data example. The script also produces the figures reported in the manuscript/Supplementary Material. Running the script requires the following R packages: AUGglmmTMB,MASS, brglm2, optimx, numDeriv, glmmTMB, lme4, xtable, blme, mvtnorm, dplyr, ggplot2, tidyr.  
 mv_MSPAL_illustration_2.R: the source code to fit SPM method, obtained from gitHub (https://github.com/psterzinger/softpen_supplementary), adapted by Rok Blagus to allow the calculation of SEs.
-AUGglmmTMB_0.1.0.tar.gz: the R package AUGglmmTMB that implements MPL.
+AUGglmmTMB_0.1.0.tar.gz: the R package AUGglmmTMB that implements MPL. The package also includes the real data.
 figure_real.pdf: coefficient paths (supplementary material)
 figure_real1.pdf: coefficient paths (main document)
 lims.pdf: conditional log-likelihood by tau (supplementary material)
