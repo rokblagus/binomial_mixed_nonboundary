@@ -11,6 +11,8 @@ library(car)
 library(ggplot2)
 library(tidyr)
 library(dplyr)
+library(brglm2)
+library(reformulas)
 
 #dd<-read.table("dataBirds.txt",header=T,dec=",",sep="\t",fill=TRUE)
 data(birds)
