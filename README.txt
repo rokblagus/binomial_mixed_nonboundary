@@ -34,32 +34,28 @@ Matrix products: default
   LAPACK version 3.12.1
 
 locale:
-[1] LC_COLLATE=English_Slovenia.utf8  LC_CTYPE=English_Slovenia.utf8    LC_MONETARY=English_Slovenia.utf8
-[4] LC_NUMERIC=C                      LC_TIME=English_Slovenia.utf8    
+[1] LC_COLLATE=English_Slovenia.utf8  LC_CTYPE=English_Slovenia.utf8    LC_MONETARY=English_Slovenia.utf8 LC_NUMERIC=C                     
+[5] LC_TIME=English_Slovenia.utf8    
 
 time zone: Europe/Ljubljana
 tzcode source: internal
 
 attached base packages:
-[1] parallel  stats     graphics  grDevices utils     datasets  methods   base     
+[1] stats     graphics  grDevices utils     datasets  methods   base     
 
 other attached packages:
- [1] writexl_1.5.4       brglm2_1.0.1        lmerTest_3.1-3      dplyr_1.1.4         tidyr_1.3.1        
- [6] ggplot2_4.0.1       mvtnorm_1.3-3       numDeriv_2016.8-1.1 optimx_2025-4.9     logistf_1.10       
-[11] MASS_7.3-65         blme_1.0-6          xtable_1.8-4        car_3.1-3           carData_3.0-5      
-[16] lme4_1.1-38         Matrix_1.7-4        glmmTMB_1.1.13     
+ [1] dplyr_1.1.4         tidyr_1.3.1         ggplot2_4.0.1       car_3.1-3           carData_3.0-5       xtable_1.8-4        mvtnorm_1.3-3      
+ [8] blme_1.0-6          numDeriv_2016.8-1.1 lme4_1.1-38         Matrix_1.7-4        optimx_2025-4.9     MASS_7.3-65         glmmTMB_1.1.14     
+[15] AUGglmmTMB_0.1.0   
 
 loaded via a namespace (and not attached):
- [1] utf8_1.2.6         sandwich_3.1-1     generics_0.1.4     enrichwith_0.4.0   lattice_0.22-7    
- [6] pracma_2.4.6       magrittr_2.0.4     nleqslv_3.3.5      grid_4.5.2         RColorBrewer_1.1-3
-[11] nnet_7.3-20        Formula_1.2-5      mgcv_1.9-3         purrr_1.2.0        scales_1.4.0      
-[16] abind_1.4-8        reformulas_0.4.2   Rdpack_2.6.4       cli_3.6.5          crayon_1.5.3      
-[21] rlang_1.1.6        rbibutils_2.4      splines_4.5.2      withr_3.0.2        tools_4.5.2       
-[26] nloptr_2.2.1       minqa_1.2.8        boot_1.3-32        vctrs_0.6.5        R6_2.6.1          
-[31] zoo_1.8-14         lifecycle_1.0.4    pkgconfig_2.0.3    pillar_1.11.1      gtable_0.3.6      
-[36] glue_1.8.0         Rcpp_1.1.0         statmod_1.5.1      tidyselect_1.2.1   tibble_3.3.0      
-[41] farver_2.1.2       nlme_3.1-168       labeling_0.4.3     TMB_1.9.18         compiler_4.5.2    
-[46] S7_0.2.1
+ [1] generics_0.1.4     sandwich_3.1-1     enrichwith_0.4.0   lattice_0.22-7     magrittr_2.0.4     pracma_2.4.6       grid_4.5.2        
+ [8] RColorBrewer_1.1-3 nleqslv_3.3.5      brglm2_1.0.1       nnet_7.3-20        Formula_1.2-5      mgcv_1.9-3         purrr_1.2.0       
+[15] scales_1.4.0       abind_1.4-8        reformulas_0.4.4   Rdpack_2.6.4       cli_3.6.5          rlang_1.1.6        rbibutils_2.4     
+[22] splines_4.5.2      withr_3.0.2        tools_4.5.2        nloptr_2.2.1       minqa_1.2.8        boot_1.3-32        vctrs_0.6.5       
+[29] R6_2.6.1           zoo_1.8-14         lifecycle_1.0.4    pkgconfig_2.0.3    pillar_1.11.1      gtable_0.3.6       glue_1.8.0        
+[36] Rcpp_1.1.0         statmod_1.5.1      tidyselect_1.2.1   tibble_3.3.0       farver_2.1.2       nlme_3.1-168       labeling_0.4.3    
+[43] TMB_1.9.18         compiler_4.5.2     S7_0.2.1        
 
 session info for simulation study (performed on the cluster of CentOS based containers):
 R version 3.6.0 (2019-04-26)
