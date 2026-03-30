@@ -133,20 +133,20 @@ fit_blm.n<-bglmer(parasites~migration+food+(migration|phylogenetic)+(1|species),
 
 fit_rok_1<-AUGglmmTMB(parasites~migration+food+(migration|phylogenetic)+(1|species),data=dd,
                       link="logit",
-                      penOpt = AUGglmmTMBPenalty(autrepen =TRUE,nu=list(3),plot=FALSE),
+                      penOpt = AUGglmmTMBPenalty(autrepen =TRUE,plot=FALSE),
                       control=AUGglmmTMBControl(fit_pGLM = TRUE,maxiter = 1,tol=1e-5,save_coef=TRUE))
 
 #MPL-A1
 fit_rok<-AUGglmmTMB(parasites~migration+food+(migration|phylogenetic)+(1|species),data=dd,
                       link="logit",
-                      penOpt = AUGglmmTMBPenalty(autrepen =TRUE,nu=list(3),plot=FALSE),
+                      penOpt = AUGglmmTMBPenalty(autrepen =TRUE,plot=FALSE),
                       control=AUGglmmTMBControl(fit_pGLM = FALSE,maxiter = 50,tol=1e-5,save_coef=TRUE))
 
 #MPL-A2
 
 fit_rok_frth<-AUGglmmTMB(parasites~migration+food+(migration|phylogenetic)+(1|species),data=dd,
                       link="logit",
-                      penOpt = AUGglmmTMBPenalty(autrepen =TRUE,nu=list(3),plot=FALSE),
+                      penOpt = AUGglmmTMBPenalty(autrepen =TRUE,plot=FALSE),
                       control=AUGglmmTMBControl(fit_pGLM = TRUE,maxiter = 50,tol=1e-5,save_coef=TRUE))
 
 
@@ -552,20 +552,20 @@ dev.off()
 #MPL-A2(1)
 fit_rok_1<-AUGglmmTMB(parasites~migration+food+(migration|phylogenetic),data=dd,
                       link="logit",
-                      penOpt = AUGglmmTMBPenalty(autrepen =TRUE,nu=list(3),plot=FALSE),
+                      penOpt = AUGglmmTMBPenalty(autrepen =TRUE,plot=FALSE),
                       control=AUGglmmTMBControl(fit_pGLM = TRUE,maxiter = 1,tol=1e-5,save_coef=TRUE))
 
 
 #MPL-A1
 fit_rok<-AUGglmmTMB(parasites~migration+food+(migration|phylogenetic),data=dd,
                       link="logit",
-                      penOpt = AUGglmmTMBPenalty(autrepen =TRUE,nu=list(3),plot=FALSE),
+                      penOpt = AUGglmmTMBPenalty(autrepen =TRUE,plot=FALSE),
                       control=AUGglmmTMBControl(fit_pGLM = FALSE,maxiter = 50,tol=1e-5,save_coef=TRUE))
 
 #MPL-A2
 fit_rok_frth<-AUGglmmTMB(parasites~migration+food+(migration|phylogenetic),data=dd,
                     link="logit",
-                    penOpt = AUGglmmTMBPenalty(autrepen =TRUE,nu=list(3),plot=FALSE),
+                    penOpt = AUGglmmTMBPenalty(autrepen =TRUE,plot=FALSE),
                     control=AUGglmmTMBControl(fit_pGLM = TRUE,maxiter = 50,tol=1e-5,save_coef=TRUE))
 
 
