@@ -154,7 +154,7 @@ fit_rok_frth<-AUGglmmTMB(parasites~migration+food+(migration|phylogenetic)+(1|sp
 
 #summarize the data
 
-mod<-fit_rok$fit$fit
+mod<-fit_rok$fit
 #sd for 2nd RE
 vr<-mod$sdr$cov.fixed[6+3,6+3]
 est<-mod$sdr$par.fixed[6+3]
@@ -194,7 +194,7 @@ resi_rok<-c(fxf,
 
 )
 
-mod<-fit_rok_1$fit$fit
+mod<-fit_rok_1$fit
 
 #sd for 2nd RE
 vr<-mod$sdr$cov.fixed[6+3,6+3]
@@ -236,7 +236,7 @@ resi_rok2<-c(fxf,
 )
 
 
-mod<-fit_rok_frth$fit$fit
+mod<-fit_rok_frth$fit
 #sd for 2nd RE
 vr<-mod$sdr$cov.fixed[6+3,6+3]
 est<-mod$sdr$par.fixed[6+3]
@@ -385,14 +385,14 @@ resx
 
 ####plot coef paths for all methods
 
-m1<-fit_rok_frth$fit$coefs
+m1<-fit_rok_frth$coefs$coefs_glmm
 
-m2<-fit_rok$fit$coefs
+m2<-fit_rok$coefs$coefs_glmm
 
 nm<-max(nrow(m1),nrow(m2))
 
 
-m3<- matrix(fit_rok_1$fit$coefs,nrow=nm,ncol=ncol(m1),byrow=TRUE)
+m3<- matrix(fit_rok_1$coefs$coefs_glmm,nrow=nm,ncol=ncol(m1),byrow=TRUE)
 
 
 
@@ -447,7 +447,7 @@ limits <- df_long %>%
 
 #rather set to 0.01SE!
 
-ses<-sqrt(diag(fit_rok$fit$fit$sdr$cov.fixed))
+ses<-sqrt(diag(fit_rok$fit$sdr$cov.fixed))
 
 limits$ymin<-limits$center-0.01*ses/2
 limits$ymax<-limits$center+0.01*ses/2
@@ -627,7 +627,7 @@ resi_ml<-c(fxf,
 )
 
 
-mod<-fit_rok_1$fit$fit
+mod<-fit_rok_1$fit
 
 #sd for   RE
 
@@ -662,7 +662,7 @@ resi_rok_1<-c(fxf,
 
 
 
-mod<-fit_rok_frth$fit$fit
+mod<-fit_rok_frth$fit
 
 #sd for   RE
 
@@ -696,7 +696,7 @@ resi_rok_f<-c(fxf,
 )
 
 
-mod<-fit_rok$fit$fit
+mod<-fit_rok$fit
 
 #sd for   RE
 
@@ -883,14 +883,14 @@ resx
 
 ####plot coef paths for all methods
 
-m1<-fit_rok_frth$fit$coefs
+m1<-fit_rok_frth$coefs$coefs_glmm
 
-m2<-fit_rok$fit$coefs
+m2<-fit_rok$coefs$coefs_glmm
 
 nm<-max(nrow(m1),nrow(m2))
 
 
-m3<- matrix(fit_rok_1$fit$coefs,nrow=nm,ncol=ncol(m1),byrow=TRUE)
+m3<- matrix(fit_rok_1$coefs$coefs_glmm,nrow=nm,ncol=ncol(m1),byrow=TRUE)
 
 
 
@@ -944,7 +944,7 @@ limits <- df_long %>%
 
 #rather set to 0.01SE!
 
-ses<-sqrt(diag(fit_rok$fit$fit$sdr$cov.fixed))
+ses<-sqrt(diag(fit_rok$fit$sdr$cov.fixed))
 
 limits$ymin<-limits$center-0.01*ses/2
 limits$ymax<-limits$center+0.01*ses/2
