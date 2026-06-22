@@ -411,7 +411,7 @@ split(df$na_fit,df$method) #nas for -1 meths are since bglm2 is not working (it 
 txt1<-"sigma[0]^2"
 txt2<-"sigma[1]^2"
 
-df$Nn<-paste0("N=",df$N,",n=",df$n)
+df$Nn<-paste0("k=",df$N,",n=",df$n)
 df$vars<-paste0(txt1,"==",df$vr_int,"*','*~",txt2,"==",df$vr_int*df$mult**2)
 
 
@@ -521,10 +521,10 @@ df2$group<-ifelse(df2$N==20,"1","2")
 
 
 nms <- c(
-  "atop(N==20, n[i]==S)",
-  "atop(N==20, n[i]==M)",
-  "atop(N==50, n[i]==S)",
-  "atop(N==50, n[i]==M)"
+  "atop(k==20, n[i]==S)",
+  "atop(k==20, n[i]==M)",
+  "atop(k==50, n[i]==S)",
+  "atop(k==50, n[i]==M)"
 )
 
 
