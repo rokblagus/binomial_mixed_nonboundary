@@ -317,6 +317,24 @@ df2$row <- 1:nrow(df2)
 # Add source label
 df2$matrix <- "MPL"
 
+
+# rescale thetas to sds(rho)
+
+df2$theta21<-exp(df2$theta21)
+df2$theta22<-exp(df2$theta22)
+df2$theta23<-df2$theta23/sqrt(1+df2$theta23**2) 
+
+
+df2$theta1<-exp(df2$theta1)
+
+#rename cols to match table
+
+colnames(df2)<-c("Intercept","migration","food[granivorous]","food[omnivorous]","food[insectivorous]",
+                 "plyo(Intercept)","plyo(migration)","rho",
+                 "species(Intercept)","row","matrix")
+
+
+
 # Combine
 df <- bind_rows( df2 )
 
@@ -329,7 +347,9 @@ df_long <- pivot_longer(
 )
 
 
-
+df_long$column<-factor(df_long$column,levels=c("Intercept","migration","food[granivorous]","food[omnivorous]","food[insectivorous]",
+                                               "species(Intercept)","plyo(Intercept)","plyo(migration)","rho"
+                                               ))
 
 
 
@@ -689,7 +709,7 @@ res<- cbind(resi_ml,resi_rok, resi_bglmert,resi_bglmern,resi_kos)
 colnames(res)<-c("ML","MPL","BMT","BMN","SPM")
 
 
-rownames(res)<-c("Intercept","migration","food[granivourous]","food[all]","food[insectivourous]"
+rownames(res)<-c("Intercept","migration","food[granivourous]","food[omnivourous]","food[insectivourous]"
                  ,"plyo (Intercept)","plyo (migration)","rho")
 
 resx<-xtable(res)
@@ -720,7 +740,14 @@ df2 <- as.data.frame(m2)
  
 # Add source label
  df2$matrix <- "MPL"
- 
+
+df2$theta1<-exp(df2$theta1)
+df2$theta2<-exp(df2$theta2) 
+
+df2$theta3<-df2$theta3/sqrt(1+df2$theta3**2)
+
+names(df2)<-c("Intercept","migration","food[granivorous]","food[omnivourous]","food[insectivorous]","plyo(Intercept)","plyo(migration)","rho","row","matrix")
+  
 # Combine
 df <- bind_rows(  df2  )
 
@@ -732,7 +759,7 @@ df_long <- pivot_longer(
   values_to = "value"
 )
 
-
+df_long$column<-factor(df_long$column,levels=c("Intercept","migration","food[granivorous]","food[all]","food[insectivorous]","plyo(Intercept)","plyo(migration)","rho"))
 
 
 
