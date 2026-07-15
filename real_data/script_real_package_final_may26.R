@@ -759,7 +759,7 @@ df_long <- pivot_longer(
   values_to = "value"
 )
 
-df_long$column<-factor(df_long$column,levels=c("Intercept","migration","food[granivorous]","food[all]","food[insectivorous]","plyo(Intercept)","plyo(migration)","rho"))
+df_long$column<-factor(df_long$column,levels=c("Intercept","migration","food[granivorous]","food[omnivourous]","food[insectivorous]","plyo(Intercept)","plyo(migration)","rho"))
 
 
 
