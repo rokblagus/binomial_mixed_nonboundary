@@ -628,7 +628,7 @@ p_bound<-ggplot(df_main,aes(group=interaction(method, group)))+
   theme_light()+
   scale_x_continuous(name="", breaks=c(1,2,3,4), labels=parse(text = nms),limits = c(0.75,4.25))+
   geom_vline(xintercept = c(1.5,2.5, 3.5),  color = "grey90") +
-  ylab("boundary estimate (%)")+
+  ylab("Infinite or NPD estimates (%)")+
   theme(axis.text.x = element_text(  vjust = 0.5, hjust=0.5))+
   geom_hline(yintercept=0) +
   scale_colour_manual(values=dfpallete_main)+
@@ -831,7 +831,7 @@ p01<-ggplot(df,aes(group=interaction(method, group)))+
   facet_grid(r2~vars,labeller = label_parsed)+
   theme_light()+
   scale_x_continuous(name="", breaks=c(1,2,3,4), labels=parse(text = nms),limits = c(0.75,4.25))+
-  ylab("boundary beta (%)")+
+  ylab("infinite beta (%)")+
   theme(axis.text.x = element_text(  vjust = 0.5, hjust=0.5))+
   geom_hline(yintercept=0) +
   scale_colour_manual(values=dfpallete)+
@@ -843,7 +843,7 @@ p02<-ggplot(df,aes(group=interaction(method, group)))+
   facet_grid(r2~vars,labeller = label_parsed)+
   theme_light()+
   scale_x_continuous(name="", breaks=c(1,2,3,4), labels=parse(text = nms),limits = c(0.75,4.25))+
-  ylab("boundary estimate (%)")+
+  ylab("Infinite or NPD estimates (%)")+
   theme(axis.text.x = element_text(  vjust = 0.5, hjust=0.5))+
   geom_hline(yintercept=0) +
   scale_colour_manual(values=dfpallete)+
