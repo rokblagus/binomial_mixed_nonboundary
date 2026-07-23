@@ -120,7 +120,7 @@ resi_glmer<-c(fxf,
 res<-cbind(resi_glmer,resi_tmb)
 colnames(res)<-c("lme4","glmmTMB")
 rownames(res)<-c("Intercept","migration","food[granivourous]","food[all]","food[insectivourous]","species (Intercept)"
-                 ,"plyo (Intercept)","plyo (migration)","rho")
+                 ,"phylo (Intercept)","phylo (migration)","rho")
 
 resx<-xtable(res)
 resx
@@ -284,7 +284,7 @@ resi_bglmern<-c(fxf,
 res<-cbind(resi_rok,resi_bglmern,resi_bglmert)
 colnames(res)<-c("MPL","BMN","BMT")
 rownames(res)<-c("Intercept","migration","food[granivorous]","food[all]","food[insectivorous]","species (Intercept)"
-                 ,"plyo (Intercept)","plyo (migration)","rho")
+                 ,"phylo (Intercept)","phylo (migration)","rho")
 
 resx<-xtable(res)
 resx
@@ -330,7 +330,7 @@ df2$theta1<-exp(df2$theta1)
 #rename cols to match table
 
 colnames(df2)<-c("Intercept","migration","food[granivorous]","food[omnivorous]","food[insectivorous]",
-                 "plyo(Intercept)","plyo(migration)","rho",
+                 "phylo(Intercept)","phylo(migration)","rho",
                  "species(Intercept)","row","matrix")
 
 
@@ -348,7 +348,7 @@ df_long <- pivot_longer(
 
 
 df_long$column<-factor(df_long$column,levels=c("Intercept","migration","food[granivorous]","food[omnivorous]","food[insectivorous]",
-                                               "species(Intercept)","plyo(Intercept)","plyo(migration)","rho"
+                                               "species(Intercept)","phylo(Intercept)","phylo(migration)","rho"
                                                ))
 
 
@@ -710,7 +710,7 @@ colnames(res)<-c("ML","MPL","BMT","BMN","SPM")
 
 
 rownames(res)<-c("Intercept","migration","food[granivourous]","food[omnivourous]","food[insectivourous]"
-                 ,"plyo (Intercept)","plyo (migration)","rho")
+                 ,"phylo (Intercept)","phylo (migration)","rho")
 
 resx<-xtable(res)
 resx
@@ -746,7 +746,7 @@ df2$theta2<-exp(df2$theta2)
 
 df2$theta3<-df2$theta3/sqrt(1+df2$theta3**2)
 
-names(df2)<-c("Intercept","migration","food[granivorous]","food[omnivourous]","food[insectivorous]","plyo(Intercept)","plyo(migration)","rho","row","matrix")
+names(df2)<-c("Intercept","migration","food[granivorous]","food[omnivourous]","food[insectivorous]","phylo(Intercept)","phylo(migration)","rho","row","matrix")
   
 # Combine
 df <- bind_rows(  df2  )
@@ -759,7 +759,7 @@ df_long <- pivot_longer(
   values_to = "value"
 )
 
-df_long$column<-factor(df_long$column,levels=c("Intercept","migration","food[granivorous]","food[omnivourous]","food[insectivorous]","plyo(Intercept)","plyo(migration)","rho"))
+df_long$column<-factor(df_long$column,levels=c("Intercept","migration","food[granivorous]","food[omnivourous]","food[insectivorous]","phylo(Intercept)","phylo(migration)","rho"))
 
 
 
